@@ -8,14 +8,18 @@ This project demonstrates the research question: **"Does fine-tuning YOLOv8 on a
 
 ### Key Features
 
+- ✅ **Two-Study Evaluation**: Comprehensive baseline vs fine-tuned comparison
+  - Study 1: Different datasets (SKU-110K baseline, Custom fine-tuned)
+  - Study 2: Same dataset (Custom baseline, Custom fine-tuned)
 - ✅ **Baseline Evaluation**: Pre-trained YOLOv8n on SKU-110K samples
 - ✅ **Fine-Tuning**: Custom dataset training (34 classes, 111 images) - **Trained on Google Colab**
 - ✅ **Production Model**: Trained model hosted on [Ultralytics Hub](https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl) (50 epochs, mAP50: 4.13%)
 - ✅ **REST API**: FastAPI backend for image upload and detection
 - ✅ **Database Integration**: PostgreSQL for storing detections and planograms
 - ✅ **SQL Analytics**: Automated discrepancy detection (missing, low stock, misplaced)
-- ✅ **Interactive Dashboard**: Streamlit UI for model comparison and inventory analytics
-- ✅ **Ultralytics Hub Integration**: Cloud-based training tracking and model versioning
+- ✅ **Interactive Dashboard**: Streamlit UI with 8 sections including two-study comparison
+- ✅ **Docker Deployment**: Ready for local and cloud deployment
+- ✅ **Railway.app Ready**: Pre-configured for one-click cloud deployment
 
 ## 📊 Success Metrics
 
@@ -57,6 +61,13 @@ See [INSTALLATION.md](INSTALLATION.md) for detailed setup instructions.
 
 ### Running the Application
 
+**Option 1: Docker (Recommended)**
+```bash
+docker-compose up -d
+```
+
+**Option 2: Manual Start**
+
 **Start FastAPI Backend:**
 ```bash
 cd backend
@@ -72,34 +83,52 @@ streamlit run dashboard/app.py
 - API: http://localhost:8000/docs
 - Dashboard: http://localhost:8501
 
+### Deployment
+
+**Local Docker:**
+```bash
+./scripts/deploy.sh
+```
+
+**Railway.app (Cloud):**
+See [RAILWAY_SETUP.md](RAILWAY_SETUP.md) for step-by-step deployment guide.
+
+**Production Model:**
+The system uses the trained model from [Ultralytics Hub](https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl) by default. No local model files needed!
+
 ## 📁 Project Structure
 
 ```
 VisionStock/
-├── data/
-│   ├── baseline_images/      # SKU-110K samples
-│   ├── fine_tune_dataset/    # Custom labeled dataset
-│   └── sample_uploads/        # Demo images
-├── models/
-│   ├── yolov8-baseline.pt    # Pre-trained model
-│   └── yolov8-finetuned.pt   # Fine-tuned model
 ├── backend/                  # FastAPI application
+│   ├── main.py              # API routes
+│   ├── config.py            # Configuration
+│   ├── db_config.py         # Database models
+│   └── sql/                 # SQL scripts
 ├── dashboard/                # Streamlit UI
-├── notebooks/                # Jupyter notebooks for analysis
-├── sql/                      # Database schemas and queries
+│   └── app.py               # Dashboard interface
+├── scripts/                  # All scripts organized
+│   ├── notebooks/           # Evaluation scripts
+│   └── training/            # Training scripts
 ├── utils/                    # Utility functions
-├── tests/                    # Test scripts
-└── results/                  # Training outputs and metrics
+├── results/                  # Evaluation results
+│   ├── study1_comparison.json
+│   ├── study2_comparison.json
+│   └── FINAL_TWO_STUDY_REPORT.md
+├── data/                     # Dataset configs (YAML only)
+├── models/                   # Model files
+├── docs/                     # Documentation
+└── tests/                    # Test scripts
 ```
 
 See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for complete structure.
 
 ## 📚 Documentation
 
-- [INSTALLATION.md](INSTALLATION.md) - Detailed setup guide
-- [USAGE.md](USAGE.md) - Usage examples and API documentation
-- [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture overview
-- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Directory structure
+- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Complete directory structure
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Deployment instructions
+- [docs/RAILWAY_DEPLOYMENT.md](docs/RAILWAY_DEPLOYMENT.md) - Railway.app deployment guide
+- [RAILWAY_SETUP.md](RAILWAY_SETUP.md) - Quick Railway setup
 
 ## 🔌 API Endpoints
 
@@ -122,27 +151,40 @@ See [USAGE.md](USAGE.md) for detailed API examples.
 
 ### Baseline Evaluation
 ```bash
-python notebooks/baseline_evaluation.py
+python scripts/notebooks/baseline_evaluation.py
 ```
 
 ### Fine-Tuning
 ```bash
-python notebooks/fine_tuning.py
+python scripts/notebooks/fine_tuning.py
 ```
 
-### Hub Integration
+### Hub Integration (Training on Google Colab)
+The model was trained on Google Colab and synced to Ultralytics Hub. For local training with Hub:
 ```bash
-cd training/projects/retail_shelf_detection
-python train_with_hub.py --use-hub
+python scripts/training/train_with_hub.py
 ```
+
+**Note**: The production model is already trained and available on [Ultralytics Hub](https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl).
 
 ## 📊 Results
 
+### Two-Study Evaluation Approach
+
+**Study 1: Different Datasets (As Per Original Proposal)**
+- Baseline: COCO pre-trained on SKU-110K dataset
+- Fine-Tuned: Custom Retail Dataset
+- Results: See `results/study1_comparison.json`
+
+**Study 2: Same Dataset (Before/After Fine-Tuning)**
+- Baseline: COCO pre-trained on Custom Retail Dataset
+- Fine-Tuned: Custom Retail Dataset
+- Results: See `results/study2_comparison.json`
+
 Training results and metrics are stored in `results/`:
-- Baseline metrics comparison
-- Fine-tuned model performance
-- Detection examples
-- Training curves
+- `study1_comparison.json` - Study 1 metrics
+- `study2_comparison.json` - Study 2 metrics
+- `FINAL_TWO_STUDY_REPORT.md` - Comprehensive comparison report
 
 ## 🛠️ Technology Stack
 
