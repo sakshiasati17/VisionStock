@@ -1,0 +1,33 @@
+{
+  "study": "Study 1: Different Datasets",
+  "baseline": {
+    "model": "YOLOv8n (COCO pre-trained)",
+    "dataset": "SKU-110K",
+    "metrics": {
+      "mAP50": 0.08116029770194924,
+      "mAP50_95": 0.037364212279207734,
+      "precision": 0.16172680412371135,
+      "recall": 0.0027592120306041685,
+      "f1_score": 0.005425853869433636
+    },
+    "timestamp": "2025-11-26T21:10:20.725313"
+  },
+  "finetuned": {
+    "model": "YOLOv8n (Fine-tuned)",
+    "dataset": "Custom Retail",
+    "metrics": {
+      "mAP50": 0.0404,
+      "mAP50_95": 0.0286,
+      "precision": 0.0423,
+      "recall": 0.1179,
+      "f1_score": 0.0622
+    }
+  },
+  "improvement": {
+    "mAP50": -0.04076029770194924,
+    "mAP50_95": -0.008764212279207734,
+    "precision": -0.11942680412371134,
+    "recall": 0.11514078796939584,
+    "f1_score": 0.05677414613056636
+  }
+}

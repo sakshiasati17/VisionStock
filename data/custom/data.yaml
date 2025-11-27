@@ -1,0 +1,46 @@
+path: .
+train: train/images
+val: val/images
+test: test/images
+nc: 34
+names:
+- almonds
+- apple
+- bag
+- beef
+- capsicum
+- cheese
+- chips
+- chocalate
+- chocolate
+- cleaner
+- coca cola
+- coke
+- detergent
+- dettol
+- doritos
+- dressing
+- fanta
+- frozen food
+- fruit
+- jelly
+- magazine
+- meat
+- orange
+- pampers
+- pepsi
+- pie
+- pizza
+- potato
+- snack
+- spices
+- steak
+- tomato
+- toothbrush
+- vegetable
+roboflow:
+  workspace: assignmentroboflow
+  project: retail-forecasting-6qs61
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/assignmentroboflow/retail-forecasting-6qs61/dataset/1

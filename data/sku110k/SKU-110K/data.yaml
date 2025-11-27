@@ -1,0 +1,7 @@
+path: /Users/sakshiasati/VisionStock/VisionStock/data/sku110k/SKU-110K
+train: train/images
+val: val/images
+test: test/images
+nc: 1
+names:
+- object

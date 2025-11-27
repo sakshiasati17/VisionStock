@@ -1,0 +1,20 @@
+### Test Detection Endpoint
+POST http://localhost:8000/api/detect
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./data/sample_uploads/test.jpg
+------WebKitFormBoundary
+Content-Disposition: form-data; name="shelf_location"
+
+A1
+------WebKitFormBoundary--
+
+### Get Detections
+GET http://localhost:8000/api/detections?limit=10
+
+### Get Summary
+GET http://localhost:8000/api/summary

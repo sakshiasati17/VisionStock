@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: visionstock_db
+    environment:
+      POSTGRES_USER: visionstock
+      POSTGRES_PASSWORD: visionstock
+      POSTGRES_DB: visionstock
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U visionstock"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: visionstock_api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://visionstock:visionstock@postgres:5432/visionstock
+      MODEL_PATH: models/yolov8-finetuned.pt
+      HUB_MODEL_URL: https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl
+      USE_HUB_MODEL: "true"
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    container_name: visionstock_dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      API_BASE_URL: http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local

@@ -1,0 +1,32 @@
+project_name: retail_shelf_detection
+description: Fine-tuned YOLOv8 for retail product detection on shelf images
+dataset:
+  path: /Users/sakshiasati/VisionStock/VisionStock/data/custom
+  yaml: /Users/sakshiasati/VisionStock/VisionStock/data/custom.yaml
+  classes: 34
+  train_images: 71
+  val_images: 21
+  test_images: 13
+model:
+  base: yolov8n.pt
+  input_size: 640
+  task: detect
+training:
+  epochs: 50
+  batch_size: 16
+  learning_rate: 0.01
+  device: cpu
+  augmentation:
+    hsv_h: 0.015
+    hsv_s: 0.7
+    hsv_v: 0.4
+    degrees: 10
+    translate: 0.1
+    scale: 0.5
+    fliplr: 0.5
+    mosaic: 1.0
+    mixup: 0.1
+ultralytics_hub:
+  enabled: true
+  project_url: https://hub.ultralytics.com/projects/0OJZZfaT2wQlSAiC8RJm
+  api_key: 12c872c2b732b104b57481a94082913bc19ddf19cc
