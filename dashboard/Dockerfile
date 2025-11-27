@@ -13,9 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy dashboard code
 COPY dashboard/ ./dashboard/
 
-# Expose port
-EXPOSE 8501
+# Expose port (Railway uses dynamic PORT)
+EXPOSE $PORT
 
-# Run Streamlit
-CMD ["streamlit", "run", "dashboard/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Run Streamlit (Railway sets PORT automatically)
+CMD streamlit run dashboard/app.py --server.port=${PORT:-8501} --server.address=0.0.0.0
 

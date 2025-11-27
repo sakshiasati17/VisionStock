@@ -21,9 +21,9 @@ COPY models/ ./models/
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# Expose port
-EXPOSE 8000
+# Expose port (Railway uses dynamic PORT)
+EXPOSE $PORT
 
-# Run API
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run API (Railway sets PORT automatically)
+CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}
 
