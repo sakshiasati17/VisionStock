@@ -93,4 +93,3 @@ ultralytics/
 !data/sku110k/SKU-110K/data.yaml
 !results/
 !scripts/
-!notebooks/

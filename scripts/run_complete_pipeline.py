@@ -21,9 +21,8 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from ultralytics import YOLO
-from notebooks.fine_tuning import train_model
-from notebooks.baseline_evaluation import evaluate_baseline_model
-from ultralytics import YOLO
+from scripts.notebooks.fine_tuning import train_model
+from scripts.notebooks.baseline_evaluation import evaluate_baseline_model
 
 logging.basicConfig(
     level=logging.INFO,

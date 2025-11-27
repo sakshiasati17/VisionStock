@@ -1,8 +1,0 @@
-{
-  "average_latency_s": 0.19213136037190756,
-  "min_latency_s": 0.15460991859436035,
-  "max_latency_s": 0.23278522491455078,
-  "requirement_met": true,
-  "iterations": 3,
-  "test_image": "data/custom/test/images/kanops_011.jpg"
-}

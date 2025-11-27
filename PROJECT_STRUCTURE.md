@@ -2,72 +2,93 @@
 
 ```
 VisionStock/
-├── README.md                 # Main project documentation
-├── CONTRIBUTING.md           # Contribution guidelines
-├── requirements.txt          # Python dependencies
-├── .gitignore               # Git ignore rules
-├── .env.example             # Environment variables template
+├── README.md                    # Main project documentation
+├── requirements.txt              # Python dependencies
+├── .gitignore                   # Git ignore rules
+├── .env.example                 # Environment variables template
+├── docker-compose.yml           # Docker Compose configuration
+├── railway.toml                 # Railway deployment config
+├── .railwayignore               # Railway build exclusions
+├── Makefile                     # Common commands
+├── LICENSE                      # MIT License
 │
-├── backend/                  # FastAPI backend
+├── backend/                     # FastAPI backend
 │   ├── __init__.py
-│   ├── main.py              # API routes
-│   ├── config.py            # Configuration
-│   ├── db_config.py         # Database models
-│   ├── schemas.py           # Pydantic schemas
-│   └── init_database.py     # Database initialization
+│   ├── main.py                  # API routes
+│   ├── config.py                # Configuration
+│   ├── db_config.py             # Database models
+│   ├── schemas.py               # Pydantic schemas
+│   ├── health.py                 # Health check endpoint
+│   ├── init_database.py          # Database initialization
+│   ├── Dockerfile                # Backend Docker image
+│   └── sql/                      # SQL scripts
+│       ├── create_tables.sql
+│       ├── planogram_table.sql
+│       └── discrepancy_queries.sql
 │
-├── dashboard/                # Streamlit dashboard
+├── dashboard/                   # Streamlit dashboard
 │   ├── __init__.py
-│   └── app.py               # Dashboard UI
+│   ├── app.py                   # Dashboard UI
+│   └── Dockerfile                # Dashboard Docker image
 │
-├── data/                     # Datasets
-│   ├── custom/              # Custom retail dataset
-│   │   ├── data.yaml
-│   │   ├── train/
-│   │   ├── val/
-│   │   └── test/
-│   └── sku110k/             # SKU-110K dataset
+├── data/                        # Datasets (YAML configs only)
+│   ├── custom/
+│   │   └── data.yaml            # Custom dataset config
+│   └── sku110k/
 │       └── SKU-110K/
+│           └── data.yaml        # SKU-110K dataset config
 │
-├── models/                   # Trained models
-│   ├── yolov8n.pt          # Baseline model
-│   └── yolov8-finetuned.pt # Fine-tuned model
+├── models/                      # Model files
+│   └── yolov8n.pt              # Baseline YOLOv8n model
 │
-├── notebooks/                # Evaluation notebooks
-│   ├── baseline_evaluation.py
-│   └── fine_tuning.py
-│
-├── scripts/                  # Utility scripts
-│   ├── complete_workflow.py
+├── scripts/                     # All scripts organized
+│   ├── deploy.sh                # Local deployment script
 │   ├── convert_sku110k_to_yolo.py
 │   ├── evaluate_sku110k_baseline.py
-│   └── run_complete_pipeline.py
+│   ├── run_complete_pipeline.py
+│   ├── notebooks/               # Evaluation scripts
+│   │   ├── baseline_evaluation.py
+│   │   └── fine_tuning.py
+│   └── training/                # Training scripts
+│       ├── train_with_hub.py
+│       └── hub_config.yaml
 │
-├── utils/                    # Utility modules
-│   ├── inference.py        # YOLO inference wrapper
-│   ├── planogram_utils.py  # Planogram utilities
-│   └── timer.py            # Performance timing
+├── utils/                       # Utility modules
+│   ├── inference.py             # YOLO inference wrapper
+│   ├── planogram_utils.py       # Planogram utilities
+│   └── timer.py                 # Performance timing
 │
-├── sql/                      # SQL scripts
-│   ├── create_tables.sql
-│   ├── discrepancy_queries.sql
-│   └── planogram_table.sql
+├── results/                     # Evaluation results
+│   ├── study1_comparison.json   # Study 1 metrics
+│   ├── study2_comparison.json   # Study 2 metrics
+│   └── FINAL_TWO_STUDY_REPORT.md
 │
-├── tests/                    # Test files
+├── tests/                       # Tests
 │   ├── api_tests.http
 │   └── performance_test.py
 │
-├── results/                  # Study results
-│   ├── study1_comparison.json
-│   ├── study2_comparison.json
-│   └── FINAL_TWO_STUDY_REPORT.md
-│
-├── training/                 # Training scripts
-│   └── projects/
-│       └── retail_shelf_detection/
-│
-└── docs/                     # Documentation
+└── docs/                        # Documentation
     ├── API.md
     ├── ARCHITECTURE.md
-    └── DEPLOYMENT.md
+    ├── DEPLOYMENT.md
+    └── RAILWAY_DEPLOYMENT.md
 ```
+
+## Key Directories
+
+- **backend/**: FastAPI application with all API endpoints
+- **dashboard/**: Streamlit web interface
+- **scripts/**: All utility, training, and evaluation scripts
+- **utils/**: Reusable utility functions
+- **results/**: Model evaluation results and reports
+- **docs/**: Project documentation
+
+## Excluded from Git
+
+The following are excluded via `.gitignore`:
+- Large model files (`*.pt` except `yolov8n.pt`)
+- Dataset images and labels
+- Training runs (`runs/`)
+- Cache files (`*.cache`)
+- Logs (`logs/`)
+- Environment files (`.env`)
