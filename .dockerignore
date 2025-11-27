@@ -26,17 +26,16 @@ ENV/
 *.swo
 
 # Data (large files)
-data/*/images/
-data/*/labels/
+data/
 *.zip
 *.tar.gz
 *.cache
 
 # Models (large files)
-*.pt
-*.pth
+models/
 weights/
 runs/
+results/
 
 # Logs
 logs/
