@@ -458,39 +458,39 @@ async def get_models(
             query = query.filter(ModelVersion.is_active == 1)
         
         models = query.order_by(ModelVersion.created_at.desc()).all()
-    
-    result = []
-    for model in models:
-        # Get latest metrics if available
-        latest_metrics = db.query(ModelMetrics).filter(
-            ModelMetrics.model_version_id == model.id
-        ).order_by(ModelMetrics.evaluation_date.desc()).first()
         
-        model_data = {
-            "id": model.id,
-            "version_name": model.version_name,
-            "model_type": model.model_type,
-            "model_path": model.model_path,
-            "base_model": model.base_model,
-            "epochs": model.epochs,
-            "is_active": bool(model.is_active),
-            "created_at": model.created_at.isoformat(),
-            "latest_metrics": None
-        }
-        
-        if latest_metrics:
-            model_data["latest_metrics"] = {
-                "map50": latest_metrics.map50,
-                "map50_95": latest_metrics.map50_95,
-                "precision": latest_metrics.precision,
-                "recall": latest_metrics.recall,
-                "f1_score": latest_metrics.f1_score,
-                "inference_time_ms": latest_metrics.inference_time_ms,
-                "evaluation_date": latest_metrics.evaluation_date.isoformat()
+        result = []
+        for model in models:
+            # Get latest metrics if available
+            latest_metrics = db.query(ModelMetrics).filter(
+                ModelMetrics.model_version_id == model.id
+            ).order_by(ModelMetrics.evaluation_date.desc()).first()
+            
+            model_data = {
+                "id": model.id,
+                "version_name": model.version_name,
+                "model_type": model.model_type,
+                "model_path": model.model_path,
+                "base_model": model.base_model,
+                "epochs": model.epochs,
+                "is_active": bool(model.is_active),
+                "created_at": model.created_at.isoformat(),
+                "latest_metrics": None
             }
+            
+            if latest_metrics:
+                model_data["latest_metrics"] = {
+                    "map50": latest_metrics.map50,
+                    "map50_95": latest_metrics.map50_95,
+                    "precision": latest_metrics.precision,
+                    "recall": latest_metrics.recall,
+                    "f1_score": latest_metrics.f1_score,
+                    "inference_time_ms": latest_metrics.inference_time_ms,
+                    "evaluation_date": latest_metrics.evaluation_date.isoformat()
+                }
+            
+            result.append(model_data)
         
-        result.append(model_data)
-    
         return result
     except Exception as e:
         logger.error(f"Error getting models: {e}")
