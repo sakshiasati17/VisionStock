@@ -113,7 +113,7 @@ with st.sidebar:
     st.markdown("<hr style='border-color: rgba(255,255,255,0.2); margin: 2rem 0;'>", unsafe_allow_html=True)
 
     # API Configuration
-    API_DEFAULT_BASE_URL = "https://visionstock-backend-5z6zqldw6q-uc.a.run.app"
+    API_DEFAULT_BASE_URL = "https://visionstock-backend-146728282882.us-central1.run.app"
 
     st.markdown("### 🔗 Configuration")
     API_BASE_URL = st.text_input(
