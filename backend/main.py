@@ -335,25 +335,25 @@ async def analyze_discrepancies(
         planogram_entries = db.query(Planogram).filter(
             Planogram.planogram_name == planogram_name
         ).all()
-    
-    if not planogram_entries:
-        raise HTTPException(status_code=404, detail="Planogram not found")
-    
-    # Get recent detections
-    query = db.query(Detection)
-    if image_path:
-        query = query.filter(Detection.image_path == image_path)
-    if shelf_location:
-        query = query.filter(Detection.shelf_location == shelf_location)
-    
-    detections = query.all()
-    
-    # Group detections by SKU and shelf location
-    detection_counts = {}
-    for det in detections:
-        key = (det.sku or det.class_name, det.shelf_location or "unknown")
-        detection_counts[key] = detection_counts.get(key, 0) + 1
-    
+        
+        if not planogram_entries:
+            raise HTTPException(status_code=404, detail="Planogram not found")
+        
+        # Get recent detections
+        query = db.query(Detection)
+        if image_path:
+            query = query.filter(Detection.image_path == image_path)
+        if shelf_location:
+            query = query.filter(Detection.shelf_location == shelf_location)
+        
+        detections = query.all()
+        
+        # Group detections by SKU and shelf location
+        detection_counts = {}
+        for det in detections:
+            key = (det.sku or det.class_name, det.shelf_location or "unknown")
+            detection_counts[key] = detection_counts.get(key, 0) + 1
+        
         # Compare with planogram
         discrepancies = []
         for planogram in planogram_entries:
@@ -452,34 +452,44 @@ async def register_model(
     db: Session = Depends(get_db)
 ):
     """Register a new model version in the database."""
+    # Handle case when database is not available
+    if db is None or ModelVersion is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
     if model_type not in ["baseline", "finetuned"]:
         raise HTTPException(status_code=400, detail="model_type must be 'baseline' or 'finetuned'")
     
-    # Check if version name already exists
-    existing = db.query(ModelVersion).filter(ModelVersion.version_name == version_name).first()
-    if existing:
-        raise HTTPException(status_code=400, detail=f"Model version '{version_name}' already exists")
-    
-    model_version = ModelVersion(
-        version_name=version_name,
-        model_type=model_type,
-        model_path=model_path,
-        base_model=base_model,
-        epochs=epochs,
-        dataset_path=dataset_path,
-        is_active=0
-    )
-    db.add(model_version)
-    db.commit()
-    db.refresh(model_version)
-    
-    return {
-        "id": model_version.id,
-        "version_name": model_version.version_name,
-        "model_type": model_version.model_type,
-        "model_path": model_version.model_path,
-        "created_at": model_version.created_at.isoformat()
-    }
+    try:
+        # Check if version name already exists
+        existing = db.query(ModelVersion).filter(ModelVersion.version_name == version_name).first()
+        if existing:
+            raise HTTPException(status_code=400, detail=f"Model version '{version_name}' already exists")
+        
+        model_version = ModelVersion(
+            version_name=version_name,
+            model_type=model_type,
+            model_path=model_path,
+            base_model=base_model,
+            epochs=epochs,
+            dataset_path=dataset_path,
+            is_active=0
+        )
+        db.add(model_version)
+        db.commit()
+        db.refresh(model_version)
+        
+        return {
+            "id": model_version.id,
+            "version_name": model_version.version_name,
+            "model_type": model_version.model_type,
+            "model_path": model_version.model_path,
+            "created_at": model_version.created_at.isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error registering model: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to register model: {str(e)}")
 
 
 @app.get("/api/models")
@@ -555,36 +565,46 @@ async def add_model_metrics(
     db: Session = Depends(get_db)
 ):
     """Add evaluation metrics for a model version."""
-    model = db.query(ModelVersion).filter(ModelVersion.id == model_id).first()
-    if not model:
-        raise HTTPException(status_code=404, detail="Model version not found")
+    # Handle case when database is not available
+    if db is None or ModelVersion is None or ModelMetrics is None:
+        raise HTTPException(status_code=503, detail="Database not available")
     
-    metrics = ModelMetrics(
-        model_version_id=model_id,
-        map50=map50,
-        map50_95=map50_95,
-        precision=precision,
-        recall=recall,
-        f1_score=f1_score,
-        inference_time_ms=inference_time_ms,
-        test_dataset_path=test_dataset_path,
-        num_test_images=num_test_images
-    )
-    db.add(metrics)
-    db.commit()
-    db.refresh(metrics)
-    
-    return {
-        "id": metrics.id,
-        "model_version_id": metrics.model_version_id,
-        "map50": metrics.map50,
-        "map50_95": metrics.map50_95,
-        "precision": metrics.precision,
-        "recall": metrics.recall,
-        "f1_score": metrics.f1_score,
-        "inference_time_ms": metrics.inference_time_ms,
-        "evaluation_date": metrics.evaluation_date.isoformat()
-    }
+    try:
+        model = db.query(ModelVersion).filter(ModelVersion.id == model_id).first()
+        if not model:
+            raise HTTPException(status_code=404, detail="Model version not found")
+        
+        metrics = ModelMetrics(
+            model_version_id=model_id,
+            map50=map50,
+            map50_95=map50_95,
+            precision=precision,
+            recall=recall,
+            f1_score=f1_score,
+            inference_time_ms=inference_time_ms,
+            test_dataset_path=test_dataset_path,
+            num_test_images=num_test_images
+        )
+        db.add(metrics)
+        db.commit()
+        db.refresh(metrics)
+        
+        return {
+            "id": metrics.id,
+            "model_version_id": metrics.model_version_id,
+            "map50": metrics.map50,
+            "map50_95": metrics.map50_95,
+            "precision": metrics.precision,
+            "recall": metrics.recall,
+            "f1_score": metrics.f1_score,
+            "inference_time_ms": metrics.inference_time_ms,
+            "evaluation_date": metrics.evaluation_date.isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error adding model metrics: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to add metrics: {str(e)}")
 
 
 @app.get("/api/models/comparison")
