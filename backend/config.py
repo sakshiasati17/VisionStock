@@ -39,12 +39,17 @@ if env_model_path:
     MODEL_PATH = env_model_path
 elif os.getenv("USE_HUB_MODEL", "true").lower() == "true":
     # Use Hub model by default (trained model with 50 epochs, mAP50: 0.0413)
-    MODEL_PATH = HUB_MODEL_URL
-    # Check for local trained model as fallback
+    # Check for local trained model as fallback if Hub is not accessible
     fine_tuned_path = BASE_DIR / "runs" / "detect" / "train" / "weights" / "best.pt"
-    if not fine_tuned_path.exists() and fine_tuned_model.exists():
-        # If Hub unavailable, fallback to local trained model
+    if fine_tuned_path.exists():
+        # Prefer local trained model if available
+        MODEL_PATH = str(fine_tuned_path.resolve())
+    elif fine_tuned_model.exists():
+        # Fallback to saved fine-tuned model
         MODEL_PATH = str(fine_tuned_model.resolve())
+    else:
+        # Use Hub model URL (will be downloaded on first use)
+        MODEL_PATH = HUB_MODEL_URL
 else:
     # Use local trained model if available
     fine_tuned_path = BASE_DIR / "runs" / "detect" / "train" / "weights" / "best.pt"

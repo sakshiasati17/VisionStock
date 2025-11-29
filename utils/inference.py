@@ -32,9 +32,9 @@ class SceneDetector:
         # Lazy import config to avoid circular imports
         try:
             from backend.config import MODEL_PATH, MODEL_CONFIDENCE, MODEL_IOU_THRESHOLD
-            self.model_path = model_path or MODEL_PATH
-            self.confidence = MODEL_CONFIDENCE
-            self.iou_threshold = MODEL_IOU_THRESHOLD
+        self.model_path = model_path or MODEL_PATH
+        self.confidence = MODEL_CONFIDENCE
+        self.iou_threshold = MODEL_IOU_THRESHOLD
         except Exception as e:
             logger.warning(f"Failed to import config, using defaults: {e}")
             self.model_path = model_path or "https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl"
@@ -50,9 +50,9 @@ class SceneDetector:
             logger.error(f"Failed to load model: {e}")
             # Try to download default model
             try:
-                logger.info("Attempting to download default YOLOv8n model...")
+            logger.info("Attempting to download default YOLOv8n model...")
                 YOLO = _get_yolo()
-                self.model = YOLO("yolov8n.pt")
+            self.model = YOLO("yolov8n.pt")
             except Exception as e2:
                 logger.error(f"Failed to load fallback model: {e2}")
                 raise

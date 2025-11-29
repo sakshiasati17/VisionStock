@@ -116,7 +116,7 @@ async def detect_objects(
 ):
     """
     Upload an image and detect objects using YOLOv8.
-    Stores detection results in the database.
+    Stores detection results in the database if available.
     """
     # Validate file
     if not file.content_type.startswith("image/"):
@@ -133,29 +133,33 @@ async def detect_objects(
         # Run detection
         detections, inference_time_ms = get_detector().detect(str(file_path))
         
-        # Store detections in database
-        db_detections = []
-        for det in detections:
-            db_detection = Detection(
-                image_path=str(file_path),
-                timestamp=datetime.now(timezone.utc),
-                class_name=det["class_name"],
-                confidence=det["confidence"],
-                x_center=det["x_center"],
-                y_center=det["y_center"],
-                width=det["width"],
-                height=det["height"],
-                shelf_location=shelf_location,
-                meta_data={"bbox": det["bbox"]}
-            )
-            db.add(db_detection)
-            db_detections.append(db_detection)
-        
-        db.commit()
-        
-        # Refresh to get IDs
-        for db_det in db_detections:
-            db.refresh(db_det)
+        # Store detections in database if available
+        if db is not None and Detection is not None:
+            try:
+                db_detections = []
+                for det in detections:
+                    db_detection = Detection(
+                        image_path=str(file_path),
+                        timestamp=datetime.now(timezone.utc),
+                        class_name=det["class_name"],
+                        confidence=det["confidence"],
+                        x_center=det["x_center"],
+                        y_center=det["y_center"],
+                        width=det["width"],
+                        height=det["height"],
+                        shelf_location=shelf_location,
+                        meta_data={"bbox": det["bbox"]}
+                    )
+                    db.add(db_detection)
+                    db_detections.append(db_detection)
+                
+                db.commit()
+                
+                # Refresh to get IDs
+                for db_det in db_detections:
+                    db.refresh(db_det)
+            except Exception as db_error:
+                logger.warning(f"Failed to save to database: {db_error}")
         
         return DetectionResponse(
             image_path=str(file_path),
@@ -177,44 +181,52 @@ async def get_detections(
     db: Session = Depends(get_db)
 ):
     """Get detection records with optional filters."""
-    query = db.query(Detection)
+    # Handle case when database is not available
+    if db is None or Detection is None:
+        return []
     
-    if sku:
-        query = query.filter(Detection.sku == sku)
-    if shelf_location:
-        query = query.filter(Detection.shelf_location == shelf_location)
-    
-    detections = query.order_by(Detection.timestamp.desc()).limit(limit).all()
-    
-    # Group by image_path
-    results = {}
-    for det in detections:
-        if det.image_path not in results:
-            results[det.image_path] = {
-                "image_path": det.image_path,
-                "timestamp": det.timestamp,
-                "detections": []
-            }
-        results[det.image_path]["detections"].append({
-            "class_name": det.class_name,
-            "confidence": det.confidence,
-            "x_center": det.x_center,
-            "y_center": det.y_center,
-            "width": det.width,
-            "height": det.height,
-            "sku": det.sku,
-            "shelf_location": det.shelf_location
-        })
-    
-    return [
-        DetectionResponse(
-            image_path=r["image_path"],
-            timestamp=r["timestamp"],
-            detections_count=len(r["detections"]),
-            detections=r["detections"]
-        )
-        for r in results.values()
-    ]
+    try:
+        query = db.query(Detection)
+        
+        if sku:
+            query = query.filter(Detection.sku == sku)
+        if shelf_location:
+            query = query.filter(Detection.shelf_location == shelf_location)
+        
+        detections = query.order_by(Detection.timestamp.desc()).limit(limit).all()
+        
+        # Group by image_path
+        results = {}
+        for det in detections:
+            if det.image_path not in results:
+                results[det.image_path] = {
+                    "image_path": det.image_path,
+                    "timestamp": det.timestamp,
+                    "detections": []
+                }
+            results[det.image_path]["detections"].append({
+                "class_name": det.class_name,
+                "confidence": det.confidence,
+                "x_center": det.x_center,
+                "y_center": det.y_center,
+                "width": det.width,
+                "height": det.height,
+                "sku": det.sku,
+                "shelf_location": det.shelf_location
+            })
+        
+        return [
+            DetectionResponse(
+                image_path=r["image_path"],
+                timestamp=r["timestamp"],
+                detections_count=len(r["detections"]),
+                detections=r["detections"]
+            )
+            for r in results.values()
+        ]
+    except Exception as e:
+        logger.error(f"Error getting detections: {e}")
+        return []
 
 
 @app.post("/api/planograms", response_model=PlanogramResponse)
@@ -223,21 +235,29 @@ async def create_planogram(
     db: Session = Depends(get_db)
 ):
     """Create a new planogram entry."""
-    db_planogram = Planogram(
-        planogram_name=planogram.planogram_name,
-        sku=planogram.sku,
-        product_name=planogram.product_name,
-        shelf_location=planogram.shelf_location,
-        expected_count=planogram.expected_count,
-        x_position=planogram.x_position,
-        y_position=planogram.y_position,
-        meta_data=planogram.meta_data
-    )
-    db.add(db_planogram)
-    db.commit()
-    db.refresh(db_planogram)
+    # Handle case when database is not available
+    if db is None or Planogram is None:
+        raise HTTPException(status_code=503, detail="Database not available")
     
-    return PlanogramResponse.model_validate(db_planogram)
+    try:
+        db_planogram = Planogram(
+            planogram_name=planogram.planogram_name,
+            sku=planogram.sku,
+            product_name=planogram.product_name,
+            shelf_location=planogram.shelf_location,
+            expected_count=planogram.expected_count,
+            x_position=planogram.x_position,
+            y_position=planogram.y_position,
+            meta_data=planogram.meta_data
+        )
+        db.add(db_planogram)
+        db.commit()
+        db.refresh(db_planogram)
+        
+        return PlanogramResponse.model_validate(db_planogram)
+    except Exception as e:
+        logger.error(f"Error creating planogram: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create planogram: {str(e)}")
 
 
 @app.get("/api/planograms", response_model=List[PlanogramResponse])
@@ -247,15 +267,23 @@ async def get_planograms(
     db: Session = Depends(get_db)
 ):
     """Get planogram records."""
-    query = db.query(Planogram)
+    # Handle case when database is not available
+    if db is None or Planogram is None:
+        return []
     
-    if planogram_name:
-        query = query.filter(Planogram.planogram_name == planogram_name)
-    if sku:
-        query = query.filter(Planogram.sku == sku)
-    
-    planograms = query.all()
-    return [PlanogramResponse.model_validate(p) for p in planograms]
+    try:
+        query = db.query(Planogram)
+        
+        if planogram_name:
+            query = query.filter(Planogram.planogram_name == planogram_name)
+        if sku:
+            query = query.filter(Planogram.sku == sku)
+        
+        planograms = query.all()
+        return [PlanogramResponse.model_validate(p) for p in planograms]
+    except Exception as e:
+        logger.error(f"Error getting planograms: {e}")
+        return []
 
 
 @app.get("/api/discrepancies", response_model=List[DiscrepancyResponse])
@@ -267,17 +295,25 @@ async def get_discrepancies(
     db: Session = Depends(get_db)
 ):
     """Get discrepancy records."""
-    query = db.query(Discrepancy)
+    # Handle case when database is not available
+    if db is None or Discrepancy is None:
+        return []
     
-    if planogram_name:
-        query = query.join(Planogram).filter(Planogram.planogram_name == planogram_name)
-    if sku:
-        query = query.filter(Discrepancy.sku == sku)
-    if discrepancy_type:
-        query = query.filter(Discrepancy.discrepancy_type == discrepancy_type)
-    
-    discrepancies = query.order_by(Discrepancy.timestamp.desc()).limit(limit).all()
-    return [DiscrepancyResponse.model_validate(d) for d in discrepancies]
+    try:
+        query = db.query(Discrepancy)
+        
+        if planogram_name:
+            query = query.join(Planogram).filter(Planogram.planogram_name == planogram_name)
+        if sku:
+            query = query.filter(Discrepancy.sku == sku)
+        if discrepancy_type:
+            query = query.filter(Discrepancy.discrepancy_type == discrepancy_type)
+        
+        discrepancies = query.order_by(Discrepancy.timestamp.desc()).limit(limit).all()
+        return [DiscrepancyResponse.model_validate(d) for d in discrepancies]
+    except Exception as e:
+        logger.error(f"Error getting discrepancies: {e}")
+        return []
 
 
 @app.post("/api/analyze")
@@ -290,10 +326,15 @@ async def analyze_discrepancies(
     """
     Compare detections with planogram and identify discrepancies.
     """
-    # Get planogram data
-    planogram_entries = db.query(Planogram).filter(
-        Planogram.planogram_name == planogram_name
-    ).all()
+    # Handle case when database is not available
+    if db is None or Planogram is None or Detection is None or Discrepancy is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    try:
+        # Get planogram data
+        planogram_entries = db.query(Planogram).filter(
+            Planogram.planogram_name == planogram_name
+        ).all()
     
     if not planogram_entries:
         raise HTTPException(status_code=404, detail="Planogram not found")
@@ -313,44 +354,47 @@ async def analyze_discrepancies(
         key = (det.sku or det.class_name, det.shelf_location or "unknown")
         detection_counts[key] = detection_counts.get(key, 0) + 1
     
-    # Compare with planogram
-    discrepancies = []
-    for planogram in planogram_entries:
-        key = (planogram.sku, planogram.shelf_location)
-        detected_count = detection_counts.get(key, 0)
-        expected_count = planogram.expected_count
-        
-        if detected_count != expected_count:
-            discrepancy_type = "missing" if detected_count < expected_count else "extra"
+        # Compare with planogram
+        discrepancies = []
+        for planogram in planogram_entries:
+            key = (planogram.sku, planogram.shelf_location)
+            detected_count = detection_counts.get(key, 0)
+            expected_count = planogram.expected_count
             
-            discrepancy = Discrepancy(
-                planogram_id=planogram.id,
-                sku=planogram.sku,
-                shelf_location=planogram.shelf_location,
-                discrepancy_type=discrepancy_type,
-                expected_count=expected_count,
-                detected_count=detected_count,
-                timestamp=datetime.now(timezone.utc)
-            )
-            db.add(discrepancy)
-            discrepancies.append(discrepancy)
-    
-    db.commit()
-    
-    return {
-        "planogram_name": planogram_name,
-        "discrepancies_found": len(discrepancies),
-        "discrepancies": [
-            {
-                "sku": d.sku,
-                "shelf_location": d.shelf_location,
-                "type": d.discrepancy_type,
-                "expected": d.expected_count,
-                "detected": d.detected_count
-            }
-            for d in discrepancies
-        ]
-    }
+            if detected_count != expected_count:
+                discrepancy_type = "missing" if detected_count < expected_count else "extra"
+                
+                discrepancy = Discrepancy(
+                    planogram_id=planogram.id,
+                    sku=planogram.sku,
+                    shelf_location=planogram.shelf_location,
+                    discrepancy_type=discrepancy_type,
+                    expected_count=expected_count,
+                    detected_count=detected_count,
+                    timestamp=datetime.now(timezone.utc)
+                )
+                db.add(discrepancy)
+                discrepancies.append(discrepancy)
+        
+        db.commit()
+        
+        return {
+            "planogram_name": planogram_name,
+            "discrepancies_found": len(discrepancies),
+            "discrepancies": [
+                {
+                    "sku": d.sku,
+                    "shelf_location": d.shelf_location,
+                    "type": d.discrepancy_type,
+                    "expected": d.expected_count,
+                    "detected": d.detected_count
+                }
+                for d in discrepancies
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Error analyzing discrepancies: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 
 @app.get("/api/summary", response_model=DetectionSummary)
