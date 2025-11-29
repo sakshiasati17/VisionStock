@@ -451,13 +451,13 @@ async def get_models(
     
     try:
         query = db.query(ModelVersion)
-    
-    if model_type:
-        query = query.filter(ModelVersion.model_type == model_type)
-    if active_only:
-        query = query.filter(ModelVersion.is_active == 1)
-    
-    models = query.order_by(ModelVersion.created_at.desc()).all()
+        
+        if model_type:
+            query = query.filter(ModelVersion.model_type == model_type)
+        if active_only:
+            query = query.filter(ModelVersion.is_active == 1)
+        
+        models = query.order_by(ModelVersion.created_at.desc()).all()
     
     result = []
     for model in models:
