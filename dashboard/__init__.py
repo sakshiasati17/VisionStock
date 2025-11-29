@@ -1,2 +1,2 @@
-"""Dashboard package for ShelfSense."""
+"""Dashboard package for VisionStock."""
 

@@ -1,4 +1,4 @@
--- SQL script to create all database tables for ShelfSense
+-- SQL script to create all database tables for VisionStock
 -- Run this if you prefer SQL over Python init_database.py
 
 -- Detections table

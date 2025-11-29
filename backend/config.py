@@ -1,4 +1,4 @@
-"""Configuration settings for ShelfSense application."""
+"""Configuration settings for VisionStock application."""
 import os
 from pathlib import Path
 from dotenv import load_dotenv

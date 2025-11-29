@@ -7,8 +7,7 @@ VisionStock/
 ├── .gitignore                   # Git ignore rules
 ├── .env.example                 # Environment variables template
 ├── docker-compose.yml           # Docker Compose configuration
-├── railway.toml                 # Railway deployment config
-├── .railwayignore               # Railway build exclusions
+├── cloudbuild.yaml              # GCP Cloud Build configuration
 ├── Makefile                     # Common commands
 ├── LICENSE                      # MIT License
 │
@@ -71,7 +70,7 @@ VisionStock/
     ├── API.md
     ├── ARCHITECTURE.md
     ├── DEPLOYMENT.md
-    └── RAILWAY_DEPLOYMENT.md
+    └── GCP_DEPLOYMENT.md
 ```
 
 ## Key Directories

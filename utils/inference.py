@@ -1,14 +1,22 @@
-"""YOLOv8 object detection module for ShelfSense."""
-from ultralytics import YOLO
+"""YOLOv8 object detection module for VisionStock."""
 from pathlib import Path
 import cv2
 import numpy as np
 from typing import List, Dict, Optional, Tuple
-from backend.config import MODEL_PATH, MODEL_CONFIDENCE, MODEL_IOU_THRESHOLD
 import logging
 import time
 
 logger = logging.getLogger(__name__)
+
+# Lazy import of YOLO to avoid slow import at module level
+def _get_yolo():
+    """Lazy import of YOLO."""
+    try:
+        from ultralytics import YOLO
+        return YOLO
+    except ImportError as e:
+        logger.error(f"Failed to import YOLO: {e}")
+        raise
 
 
 class SceneDetector:
@@ -21,19 +29,33 @@ class SceneDetector:
         Args:
             model_path: Path to YOLOv8 model weights. If None, uses default from config.
         """
-        self.model_path = model_path or MODEL_PATH
-        self.confidence = MODEL_CONFIDENCE
-        self.iou_threshold = MODEL_IOU_THRESHOLD
-        
-        # Load model
+        # Lazy import config to avoid circular imports
         try:
+            from backend.config import MODEL_PATH, MODEL_CONFIDENCE, MODEL_IOU_THRESHOLD
+            self.model_path = model_path or MODEL_PATH
+            self.confidence = MODEL_CONFIDENCE
+            self.iou_threshold = MODEL_IOU_THRESHOLD
+        except Exception as e:
+            logger.warning(f"Failed to import config, using defaults: {e}")
+            self.model_path = model_path or "https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl"
+            self.confidence = 0.25
+            self.iou_threshold = 0.45
+        
+        # Load model (YOLO imported lazily)
+        try:
+            YOLO = _get_yolo()
             self.model = YOLO(self.model_path)
             logger.info(f"Loaded YOLOv8 model from {self.model_path}")
         except Exception as e:
             logger.error(f"Failed to load model: {e}")
             # Try to download default model
-            logger.info("Attempting to download default YOLOv8n model...")
-            self.model = YOLO("yolov8n.pt")
+            try:
+                logger.info("Attempting to download default YOLOv8n model...")
+                YOLO = _get_yolo()
+                self.model = YOLO("yolov8n.pt")
+            except Exception as e2:
+                logger.error(f"Failed to load fallback model: {e2}")
+                raise
     
     def detect(self, image_path: str, track_time: bool = True) -> Tuple[List[Dict], Optional[float]]:
         """

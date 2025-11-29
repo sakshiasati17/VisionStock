@@ -1,0 +1,13 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-f', 'dashboard/Dockerfile', '-t', 'gcr.io/$PROJECT_ID/visionstock-dashboard:latest', '.']
+
+images:
+- 'gcr.io/$PROJECT_ID/visionstock-dashboard:latest'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1200s'
+

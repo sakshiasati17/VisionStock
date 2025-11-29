@@ -1,4 +1,4 @@
-"""FastAPI backend for ShelfSense."""
+"""FastAPI backend for VisionStock."""
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -8,42 +8,95 @@ import shutil
 from pathlib import Path
 import logging
 
-from backend.db_config import get_db, Detection, Planogram, Discrepancy, ModelVersion, ModelMetrics, init_db
-from utils.inference import SceneDetector
-from backend.config import UPLOAD_DIR, MAX_UPLOAD_SIZE
-from backend.schemas import (
-    DetectionResponse, DetectionCreate, PlanogramCreate, 
-    PlanogramResponse, DiscrepancyResponse, DetectionSummary
-)
-from backend.health import router as health_router
-
+# Setup logging FIRST before any imports that might use it
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Import with error handling to prevent startup failures
+try:
+    from backend.db_config import get_db, Detection, Planogram, Discrepancy, ModelVersion, ModelMetrics, init_db
+except Exception as e:
+    logger.warning(f"Failed to import db_config: {e}")
+    get_db = None
+    Detection = Planogram = Discrepancy = ModelVersion = ModelMetrics = None
+    init_db = lambda: None
+
+# SceneDetector will be imported lazily when needed
+SceneDetector = None
+
+try:
+    from backend.config import UPLOAD_DIR, MAX_UPLOAD_SIZE
+except Exception as e:
+    logger.warning(f"Failed to import config: {e}")
+    UPLOAD_DIR = Path("/tmp/uploads")
+    MAX_UPLOAD_SIZE = 10 * 1024 * 1024
+
+try:
+    from backend.schemas import (
+        DetectionResponse, DetectionCreate, PlanogramCreate, 
+        PlanogramResponse, DiscrepancyResponse, DetectionSummary
+    )
+except Exception as e:
+    logger.warning(f"Failed to import schemas: {e}")
+    DetectionResponse = DetectionCreate = PlanogramCreate = None
+    PlanogramResponse = DiscrepancyResponse = DetectionSummary = None
+
 app = FastAPI(
-    title="ShelfSense API",
-    description="Camera-Aware Inventory Management System API",
+    title="VisionStock API",
+    description="Retail Inventory Detection System API",
     version="1.0.0"
 )
 
-# Initialize detector
-detector = SceneDetector()
+# Initialize detector (lazy initialization)
+detector = None
+
+def get_detector():
+    """Lazy initialization of detector."""
+    global detector, SceneDetector
+    if detector is None:
+        # Lazy import of SceneDetector to avoid import-time YOLO loading
+        if SceneDetector is None:
+            try:
+                from utils.inference import SceneDetector as _SceneDetector
+                SceneDetector = _SceneDetector
+                logger.info("SceneDetector imported successfully")
+            except Exception as e:
+                logger.error(f"Failed to import SceneDetector: {e}")
+                raise RuntimeError(f"SceneDetector is not available: {e}")
+        logger.info("Initializing detector...")
+        detector = SceneDetector()
+        logger.info("Detector initialized")
+    return detector
 
 # Include health check router
-app.include_router(health_router)
+try:
+    from backend.health import router as health_router
+    app.include_router(health_router)
+except Exception as e:
+    logger.warning(f"Failed to include health router: {e}")
+    # Add a simple health endpoint directly
+    @app.get("/health")
+    async def health():
+        return {"status": "healthy", "service": "VisionStock API"}
 
 # Initialize database on startup
 @app.on_event("startup")
 async def startup_event():
-    init_db()
-    logger.info("Database initialized")
+    try:
+        init_db()
+        logger.info("Database initialized")
+    except Exception as e:
+        logger.warning(f"Database initialization failed (this is OK if DATABASE_URL is not set): {e}")
+        logger.info("Application will continue without database connection")
+    
+    logger.info("Application started. Detector will be loaded on first use.")
 
 
 @app.get("/")
 async def root():
     """Root endpoint."""
     return {
-        "message": "ShelfSense API",
+        "message": "VisionStock API",
         "version": "1.0.0",
         "endpoints": {
             "detect": "/api/detect",
@@ -78,7 +131,7 @@ async def detect_objects(
     
     try:
         # Run detection
-        detections, inference_time_ms = detector.detect(str(file_path))
+        detections, inference_time_ms = get_detector().detect(str(file_path))
         
         # Store detections in database
         db_detections = []
@@ -306,24 +359,42 @@ async def get_summary(
     db: Session = Depends(get_db)
 ):
     """Get summary statistics of detections."""
-    query = db.query(Detection)
-    if shelf_location:
-        query = query.filter(Detection.shelf_location == shelf_location)
+    # Handle case when database is not available
+    if db is None or Detection is None:
+        return DetectionSummary(
+            total_detections=0,
+            unique_skus=0,
+            unique_classes=0,
+            average_confidence=0.0
+        )
     
-    total_detections = query.count()
-    unique_skus = query.distinct(Detection.sku).count()
-    unique_classes = query.distinct(Detection.class_name).count()
-    
-    # Average confidence
-    from sqlalchemy import func
-    avg_confidence = db.query(func.avg(Detection.confidence)).scalar() or 0.0
-    
-    return DetectionSummary(
-        total_detections=total_detections,
-        unique_skus=unique_skus,
-        unique_classes=unique_classes,
-        average_confidence=float(avg_confidence)
-    )
+    try:
+        query = db.query(Detection)
+        if shelf_location:
+            query = query.filter(Detection.shelf_location == shelf_location)
+        
+        total_detections = query.count()
+        unique_skus = query.distinct(Detection.sku).count()
+        unique_classes = query.distinct(Detection.class_name).count()
+        
+        # Average confidence
+        from sqlalchemy import func
+        avg_confidence = db.query(func.avg(Detection.confidence)).scalar() or 0.0
+        
+        return DetectionSummary(
+            total_detections=total_detections,
+            unique_skus=unique_skus,
+            unique_classes=unique_classes,
+            average_confidence=float(avg_confidence)
+        )
+    except Exception as e:
+        logger.error(f"Error getting summary: {e}")
+        return DetectionSummary(
+            total_detections=0,
+            unique_skus=0,
+            unique_classes=0,
+            average_confidence=0.0
+        )
 
 
 @app.post("/api/models")
@@ -374,7 +445,12 @@ async def get_models(
     db: Session = Depends(get_db)
 ):
     """Get list of registered model versions."""
-    query = db.query(ModelVersion)
+    # Handle case when database is not available
+    if db is None or ModelVersion is None:
+        return []
+    
+    try:
+        query = db.query(ModelVersion)
     
     if model_type:
         query = query.filter(ModelVersion.model_type == model_type)
@@ -415,7 +491,10 @@ async def get_models(
         
         result.append(model_data)
     
-    return result
+        return result
+    except Exception as e:
+        logger.error(f"Error getting models: {e}")
+        return []
 
 
 @app.post("/api/models/{model_id}/metrics")

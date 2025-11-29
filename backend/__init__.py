@@ -1,2 +1,2 @@
-"""Backend package for ShelfSense."""
+"""Backend package for VisionStock."""
 

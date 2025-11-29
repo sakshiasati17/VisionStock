@@ -59,22 +59,14 @@ docker-compose up -d --build
 
 ## ☁️ Cloud Deployment
 
-### Option 1: Railway.app
+### Option 1: GCP Cloud Run (Recommended)
 
-1. **Create Account**: Sign up at https://railway.app
-2. **New Project**: Create new project from GitHub
-3. **Add Services**:
-   - PostgreSQL database
-   - Backend service (from `backend/Dockerfile`)
-   - Dashboard service (from `dashboard/Dockerfile`)
-4. **Environment Variables**:
-   ```
-   DATABASE_URL=<railway_postgres_url>
-   HUB_MODEL_URL=https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl
-   USE_HUB_MODEL=true
-   ULTRALYTICS_API_KEY=your_key
-   ```
-5. **Deploy**: Railway auto-deploys on git push
+See [docs/GCP_DEPLOYMENT.md](docs/GCP_DEPLOYMENT.md) for detailed instructions.
+
+Quick deploy:
+```bash
+./scripts/deploy_gcp.sh
+```
 
 ### Option 2: Render.com
 

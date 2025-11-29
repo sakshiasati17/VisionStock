@@ -1,4 +1,4 @@
-"""Database models and connection for ShelfSense."""
+"""Database models and connection for VisionStock."""
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, JSON, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -7,8 +7,16 @@ from backend.config import DATABASE_URL
 
 Base = declarative_base()
 
-# Database engine
-engine = create_engine(DATABASE_URL, echo=False)
+# Database engine - use pool_pre_ping to handle connection issues gracefully
+try:
+    engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True, connect_args={"connect_timeout": 10})
+except Exception:
+    # Fallback to in-memory SQLite if DATABASE_URL is invalid
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning("Invalid DATABASE_URL, using in-memory SQLite")
+    engine = create_engine("sqlite:///:memory:", echo=False)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -138,14 +146,26 @@ class ModelMetrics(Base):
 
 def init_db():
     """Initialize database tables."""
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to initialize database tables: {e}")
 
 
 def get_db():
     """Dependency for FastAPI to get database session."""
-    db = SessionLocal()
     try:
-        yield db
-    finally:
-        db.close()
+        db = SessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to get database session: {e}")
+        # Return None if database is not available
+        yield None
 

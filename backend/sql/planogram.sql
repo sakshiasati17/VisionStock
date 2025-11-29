@@ -1,4 +1,4 @@
--- Planogram table schema for ShelfSense backend
+-- Planogram table schema for VisionStock backend
 -- This is the SQL schema for the planogram table
 
 CREATE TABLE IF NOT EXISTS planograms (

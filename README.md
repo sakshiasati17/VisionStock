@@ -19,7 +19,7 @@ This project demonstrates the research question: **"Does fine-tuning YOLOv8 on a
 - ✅ **SQL Analytics**: Automated discrepancy detection (missing, low stock, misplaced)
 - ✅ **Interactive Dashboard**: Streamlit UI with 8 sections including two-study comparison
 - ✅ **Docker Deployment**: Ready for local and cloud deployment
-- ✅ **Railway.app Ready**: Pre-configured for one-click cloud deployment
+- ✅ **GCP Cloud Run Ready**: Pre-configured for Google Cloud Platform deployment
 
 ## 📊 Success Metrics
 
@@ -90,8 +90,14 @@ streamlit run dashboard/app.py
 ./scripts/deploy.sh
 ```
 
-**Railway.app (Cloud):**
-See [RAILWAY_SETUP.md](RAILWAY_SETUP.md) for step-by-step deployment guide.
+**GCP Cloud Run (Recommended for Large Images):**
+```bash
+# Quick deploy
+./scripts/deploy_gcp.sh
+
+# Or see detailed guide
+# See docs/GCP_DEPLOYMENT.md for step-by-step instructions
+```
 
 **Production Model:**
 The system uses the trained model from [Ultralytics Hub](https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl) by default. No local model files needed!
@@ -126,9 +132,7 @@ See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for complete structure.
 ## 📚 Documentation
 
 - [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Complete directory structure
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Deployment instructions
-- [docs/RAILWAY_DEPLOYMENT.md](docs/RAILWAY_DEPLOYMENT.md) - Railway.app deployment guide
-- [RAILWAY_SETUP.md](RAILWAY_SETUP.md) - Quick Railway setup
+- [docs/GCP_DEPLOYMENT.md](docs/GCP_DEPLOYMENT.md) - GCP Cloud Run deployment guide
 
 ## 🔌 API Endpoints
 

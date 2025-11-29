@@ -14,9 +14,9 @@ COPY utils/ ./utils/
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# Expose port (Railway uses dynamic PORT)
-EXPOSE $PORT
+# Expose port (Cloud Run uses PORT env var, defaults to 8080)
+EXPOSE 8080
 
-# Run API (Railway sets PORT automatically)
-CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Run API (Cloud Run sets PORT automatically)
+CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8080}
 
