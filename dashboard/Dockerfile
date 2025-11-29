@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy dashboard code
 COPY dashboard/ ./dashboard/
 
+# Copy results directory (for study comparisons)
+COPY results/ ./results/
+
 # Expose port (Cloud Run uses dynamic PORT)
 EXPOSE 8080
 
