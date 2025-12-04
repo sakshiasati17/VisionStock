@@ -65,7 +65,7 @@ def get_detector():
                 raise RuntimeError(f"SceneDetector is not available: {e}")
         try:
             logger.info("Initializing detector...")
-            detector = SceneDetector()
+detector = SceneDetector()
             logger.info("Detector initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize detector: {e}", exc_info=True)
@@ -87,8 +87,8 @@ except Exception as e:
 @app.on_event("startup")
 async def startup_event():
     try:
-        init_db()
-        logger.info("Database initialized")
+    init_db()
+    logger.info("Database initialized")
     except Exception as e:
         logger.warning(f"Database initialization failed (this is OK if DATABASE_URL is not set): {e}")
         logger.info("Application will continue without database connection")
@@ -136,8 +136,8 @@ async def detect_objects(
     file_path = UPLOAD_DIR / f"{timestamp}_{safe_filename}"
     
     try:
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
     except Exception as e:
         logger.error(f"Failed to save uploaded file: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
@@ -190,7 +190,7 @@ async def detect_objects(
         if detections is None:
             if detector is not None:
                 try:
-                    detections, inference_time_ms = detector.detect(str(file_path))
+        detections, inference_time_ms = detector.detect(str(file_path))
                 except FileNotFoundError as file_error:
                     logger.error(f"Image file not found: {file_error}")
                     raise HTTPException(status_code=404, detail=f"Image file not found: {str(file_error)}")
@@ -238,28 +238,28 @@ async def detect_objects(
         # Store detections in database if available
         if db is not None and Detection is not None:
             try:
-                db_detections = []
-                for det in detections:
-                    db_detection = Detection(
-                        image_path=str(file_path),
-                        timestamp=datetime.now(timezone.utc),
-                        class_name=det["class_name"],
-                        confidence=det["confidence"],
-                        x_center=det["x_center"],
-                        y_center=det["y_center"],
-                        width=det["width"],
-                        height=det["height"],
-                        shelf_location=shelf_location,
-                        meta_data={"bbox": det["bbox"]}
-                    )
-                    db.add(db_detection)
-                    db_detections.append(db_detection)
-                
-                db.commit()
-                
-                # Refresh to get IDs
-                for db_det in db_detections:
-                    db.refresh(db_det)
+        db_detections = []
+        for det in detections:
+            db_detection = Detection(
+                image_path=str(file_path),
+                timestamp=datetime.now(timezone.utc),
+                class_name=det["class_name"],
+                confidence=det["confidence"],
+                x_center=det["x_center"],
+                y_center=det["y_center"],
+                width=det["width"],
+                height=det["height"],
+                shelf_location=shelf_location,
+                meta_data={"bbox": det["bbox"]}
+            )
+            db.add(db_detection)
+            db_detections.append(db_detection)
+        
+        db.commit()
+        
+        # Refresh to get IDs
+        for db_det in db_detections:
+            db.refresh(db_det)
             except Exception as db_error:
                 logger.warning(f"Failed to save to database: {db_error}")
         
@@ -282,9 +282,9 @@ async def detect_objects(
         
         try:
             response = DetectionResponse(
-                image_path=str(file_path),
+            image_path=str(file_path),
                 timestamp=datetime.now(timezone.utc),
-                detections_count=len(detections),
+            detections_count=len(detections),
                 detections=detections_list
             )
             return response
@@ -328,44 +328,44 @@ async def get_detections(
         return []
     
     try:
-        query = db.query(Detection)
-        
-        if sku:
-            query = query.filter(Detection.sku == sku)
-        if shelf_location:
-            query = query.filter(Detection.shelf_location == shelf_location)
-        
-        detections = query.order_by(Detection.timestamp.desc()).limit(limit).all()
-        
-        # Group by image_path
-        results = {}
-        for det in detections:
-            if det.image_path not in results:
-                results[det.image_path] = {
-                    "image_path": det.image_path,
-                    "timestamp": det.timestamp,
-                    "detections": []
-                }
-            results[det.image_path]["detections"].append({
-                "class_name": det.class_name,
-                "confidence": det.confidence,
-                "x_center": det.x_center,
-                "y_center": det.y_center,
-                "width": det.width,
-                "height": det.height,
-                "sku": det.sku,
-                "shelf_location": det.shelf_location
-            })
-        
-        return [
-            DetectionResponse(
-                image_path=r["image_path"],
-                timestamp=r["timestamp"],
-                detections_count=len(r["detections"]),
-                detections=r["detections"]
-            )
-            for r in results.values()
-        ]
+    query = db.query(Detection)
+    
+    if sku:
+        query = query.filter(Detection.sku == sku)
+    if shelf_location:
+        query = query.filter(Detection.shelf_location == shelf_location)
+    
+    detections = query.order_by(Detection.timestamp.desc()).limit(limit).all()
+    
+    # Group by image_path
+    results = {}
+    for det in detections:
+        if det.image_path not in results:
+            results[det.image_path] = {
+                "image_path": det.image_path,
+                "timestamp": det.timestamp,
+                "detections": []
+            }
+        results[det.image_path]["detections"].append({
+            "class_name": det.class_name,
+            "confidence": det.confidence,
+            "x_center": det.x_center,
+            "y_center": det.y_center,
+            "width": det.width,
+            "height": det.height,
+            "sku": det.sku,
+            "shelf_location": det.shelf_location
+        })
+    
+    return [
+        DetectionResponse(
+            image_path=r["image_path"],
+            timestamp=r["timestamp"],
+            detections_count=len(r["detections"]),
+            detections=r["detections"]
+        )
+        for r in results.values()
+    ]
     except Exception as e:
         logger.error(f"Error getting detections: {e}")
         return []
@@ -382,21 +382,21 @@ async def create_planogram(
         raise HTTPException(status_code=503, detail="Database not available")
     
     try:
-        db_planogram = Planogram(
-            planogram_name=planogram.planogram_name,
-            sku=planogram.sku,
-            product_name=planogram.product_name,
-            shelf_location=planogram.shelf_location,
-            expected_count=planogram.expected_count,
-            x_position=planogram.x_position,
-            y_position=planogram.y_position,
-            meta_data=planogram.meta_data
-        )
-        db.add(db_planogram)
-        db.commit()
-        db.refresh(db_planogram)
-        
-        return PlanogramResponse.model_validate(db_planogram)
+    db_planogram = Planogram(
+        planogram_name=planogram.planogram_name,
+        sku=planogram.sku,
+        product_name=planogram.product_name,
+        shelf_location=planogram.shelf_location,
+        expected_count=planogram.expected_count,
+        x_position=planogram.x_position,
+        y_position=planogram.y_position,
+        meta_data=planogram.meta_data
+    )
+    db.add(db_planogram)
+    db.commit()
+    db.refresh(db_planogram)
+    
+    return PlanogramResponse.model_validate(db_planogram)
     except Exception as e:
         logger.error(f"Error creating planogram: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create planogram: {str(e)}")
@@ -414,15 +414,15 @@ async def get_planograms(
         return []
     
     try:
-        query = db.query(Planogram)
-        
-        if planogram_name:
-            query = query.filter(Planogram.planogram_name == planogram_name)
-        if sku:
-            query = query.filter(Planogram.sku == sku)
-        
-        planograms = query.all()
-        return [PlanogramResponse.model_validate(p) for p in planograms]
+    query = db.query(Planogram)
+    
+    if planogram_name:
+        query = query.filter(Planogram.planogram_name == planogram_name)
+    if sku:
+        query = query.filter(Planogram.sku == sku)
+    
+    planograms = query.all()
+    return [PlanogramResponse.model_validate(p) for p in planograms]
     except Exception as e:
         logger.error(f"Error getting planograms: {e}")
         return []
@@ -442,17 +442,17 @@ async def get_discrepancies(
         return []
     
     try:
-        query = db.query(Discrepancy)
-        
-        if planogram_name:
-            query = query.join(Planogram).filter(Planogram.planogram_name == planogram_name)
-        if sku:
-            query = query.filter(Discrepancy.sku == sku)
-        if discrepancy_type:
-            query = query.filter(Discrepancy.discrepancy_type == discrepancy_type)
-        
-        discrepancies = query.order_by(Discrepancy.timestamp.desc()).limit(limit).all()
-        return [DiscrepancyResponse.model_validate(d) for d in discrepancies]
+    query = db.query(Discrepancy)
+    
+    if planogram_name:
+        query = query.join(Planogram).filter(Planogram.planogram_name == planogram_name)
+    if sku:
+        query = query.filter(Discrepancy.sku == sku)
+    if discrepancy_type:
+        query = query.filter(Discrepancy.discrepancy_type == discrepancy_type)
+    
+    discrepancies = query.order_by(Discrepancy.timestamp.desc()).limit(limit).all()
+    return [DiscrepancyResponse.model_validate(d) for d in discrepancies]
     except Exception as e:
         logger.error(f"Error getting discrepancies: {e}")
         return []
@@ -473,67 +473,67 @@ async def analyze_discrepancies(
         raise HTTPException(status_code=503, detail="Database not available")
     
     try:
-        # Get planogram data
-        planogram_entries = db.query(Planogram).filter(
-            Planogram.planogram_name == planogram_name
-        ).all()
+    # Get planogram data
+    planogram_entries = db.query(Planogram).filter(
+        Planogram.planogram_name == planogram_name
+    ).all()
+    
+    if not planogram_entries:
+        raise HTTPException(status_code=404, detail="Planogram not found")
+    
+    # Get recent detections
+    query = db.query(Detection)
+    if image_path:
+        query = query.filter(Detection.image_path == image_path)
+    if shelf_location:
+        query = query.filter(Detection.shelf_location == shelf_location)
+    
+    detections = query.all()
+    
+    # Group detections by SKU and shelf location
+    detection_counts = {}
+    for det in detections:
+        key = (det.sku or det.class_name, det.shelf_location or "unknown")
+        detection_counts[key] = detection_counts.get(key, 0) + 1
+    
+    # Compare with planogram
+    discrepancies = []
+    for planogram in planogram_entries:
+        key = (planogram.sku, planogram.shelf_location)
+        detected_count = detection_counts.get(key, 0)
+        expected_count = planogram.expected_count
         
-        if not planogram_entries:
-            raise HTTPException(status_code=404, detail="Planogram not found")
-        
-        # Get recent detections
-        query = db.query(Detection)
-        if image_path:
-            query = query.filter(Detection.image_path == image_path)
-        if shelf_location:
-            query = query.filter(Detection.shelf_location == shelf_location)
-        
-        detections = query.all()
-        
-        # Group detections by SKU and shelf location
-        detection_counts = {}
-        for det in detections:
-            key = (det.sku or det.class_name, det.shelf_location or "unknown")
-            detection_counts[key] = detection_counts.get(key, 0) + 1
-        
-        # Compare with planogram
-        discrepancies = []
-        for planogram in planogram_entries:
-            key = (planogram.sku, planogram.shelf_location)
-            detected_count = detection_counts.get(key, 0)
-            expected_count = planogram.expected_count
+        if detected_count != expected_count:
+            discrepancy_type = "missing" if detected_count < expected_count else "extra"
             
-            if detected_count != expected_count:
-                discrepancy_type = "missing" if detected_count < expected_count else "extra"
-                
-                discrepancy = Discrepancy(
-                    planogram_id=planogram.id,
-                    sku=planogram.sku,
-                    shelf_location=planogram.shelf_location,
-                    discrepancy_type=discrepancy_type,
-                    expected_count=expected_count,
-                    detected_count=detected_count,
-                    timestamp=datetime.now(timezone.utc)
-                )
-                db.add(discrepancy)
-                discrepancies.append(discrepancy)
-        
-        db.commit()
-        
-        return {
-            "planogram_name": planogram_name,
-            "discrepancies_found": len(discrepancies),
-            "discrepancies": [
-                {
-                    "sku": d.sku,
-                    "shelf_location": d.shelf_location,
-                    "type": d.discrepancy_type,
-                    "expected": d.expected_count,
-                    "detected": d.detected_count
-                }
-                for d in discrepancies
-            ]
-        }
+            discrepancy = Discrepancy(
+                planogram_id=planogram.id,
+                sku=planogram.sku,
+                shelf_location=planogram.shelf_location,
+                discrepancy_type=discrepancy_type,
+                expected_count=expected_count,
+                detected_count=detected_count,
+                timestamp=datetime.now(timezone.utc)
+            )
+            db.add(discrepancy)
+            discrepancies.append(discrepancy)
+    
+    db.commit()
+    
+    return {
+        "planogram_name": planogram_name,
+        "discrepancies_found": len(discrepancies),
+        "discrepancies": [
+            {
+                "sku": d.sku,
+                "shelf_location": d.shelf_location,
+                "type": d.discrepancy_type,
+                "expected": d.expected_count,
+                "detected": d.detected_count
+            }
+            for d in discrepancies
+        ]
+    }
     except Exception as e:
         logger.error(f"Error analyzing discrepancies: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
@@ -555,24 +555,24 @@ async def get_summary(
         )
     
     try:
-        query = db.query(Detection)
-        if shelf_location:
-            query = query.filter(Detection.shelf_location == shelf_location)
-        
-        total_detections = query.count()
-        unique_skus = query.distinct(Detection.sku).count()
-        unique_classes = query.distinct(Detection.class_name).count()
-        
-        # Average confidence
-        from sqlalchemy import func
-        avg_confidence = db.query(func.avg(Detection.confidence)).scalar() or 0.0
-        
-        return DetectionSummary(
-            total_detections=total_detections,
-            unique_skus=unique_skus,
-            unique_classes=unique_classes,
-            average_confidence=float(avg_confidence)
-        )
+    query = db.query(Detection)
+    if shelf_location:
+        query = query.filter(Detection.shelf_location == shelf_location)
+    
+    total_detections = query.count()
+    unique_skus = query.distinct(Detection.sku).count()
+    unique_classes = query.distinct(Detection.class_name).count()
+    
+    # Average confidence
+    from sqlalchemy import func
+    avg_confidence = db.query(func.avg(Detection.confidence)).scalar() or 0.0
+    
+    return DetectionSummary(
+        total_detections=total_detections,
+        unique_skus=unique_skus,
+        unique_classes=unique_classes,
+        average_confidence=float(avg_confidence)
+    )
     except Exception as e:
         logger.error(f"Error getting summary: {e}")
         return DetectionSummary(
@@ -602,31 +602,31 @@ async def register_model(
         raise HTTPException(status_code=400, detail="model_type must be 'baseline' or 'finetuned'")
     
     try:
-        # Check if version name already exists
-        existing = db.query(ModelVersion).filter(ModelVersion.version_name == version_name).first()
-        if existing:
-            raise HTTPException(status_code=400, detail=f"Model version '{version_name}' already exists")
-        
-        model_version = ModelVersion(
-            version_name=version_name,
-            model_type=model_type,
-            model_path=model_path,
-            base_model=base_model,
-            epochs=epochs,
-            dataset_path=dataset_path,
-            is_active=0
-        )
-        db.add(model_version)
-        db.commit()
-        db.refresh(model_version)
-        
-        return {
-            "id": model_version.id,
-            "version_name": model_version.version_name,
-            "model_type": model_version.model_type,
-            "model_path": model_version.model_path,
-            "created_at": model_version.created_at.isoformat()
-        }
+    # Check if version name already exists
+    existing = db.query(ModelVersion).filter(ModelVersion.version_name == version_name).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Model version '{version_name}' already exists")
+    
+    model_version = ModelVersion(
+        version_name=version_name,
+        model_type=model_type,
+        model_path=model_path,
+        base_model=base_model,
+        epochs=epochs,
+        dataset_path=dataset_path,
+        is_active=0
+    )
+    db.add(model_version)
+    db.commit()
+    db.refresh(model_version)
+    
+    return {
+        "id": model_version.id,
+        "version_name": model_version.version_name,
+        "model_type": model_version.model_type,
+        "model_path": model_version.model_path,
+        "created_at": model_version.created_at.isoformat()
+    }
     except HTTPException:
         raise
     except Exception as e:
@@ -646,48 +646,48 @@ async def get_models(
         return []
     
     try:
-        query = db.query(ModelVersion)
+    query = db.query(ModelVersion)
+    
+    if model_type:
+        query = query.filter(ModelVersion.model_type == model_type)
+    if active_only:
+        query = query.filter(ModelVersion.is_active == 1)
+    
+    models = query.order_by(ModelVersion.created_at.desc()).all()
+    
+    result = []
+    for model in models:
+        # Get latest metrics if available
+        latest_metrics = db.query(ModelMetrics).filter(
+            ModelMetrics.model_version_id == model.id
+        ).order_by(ModelMetrics.evaluation_date.desc()).first()
         
-        if model_type:
-            query = query.filter(ModelVersion.model_type == model_type)
-        if active_only:
-            query = query.filter(ModelVersion.is_active == 1)
+        model_data = {
+            "id": model.id,
+            "version_name": model.version_name,
+            "model_type": model.model_type,
+            "model_path": model.model_path,
+            "base_model": model.base_model,
+            "epochs": model.epochs,
+            "is_active": bool(model.is_active),
+            "created_at": model.created_at.isoformat(),
+            "latest_metrics": None
+        }
         
-        models = query.order_by(ModelVersion.created_at.desc()).all()
-        
-        result = []
-        for model in models:
-            # Get latest metrics if available
-            latest_metrics = db.query(ModelMetrics).filter(
-                ModelMetrics.model_version_id == model.id
-            ).order_by(ModelMetrics.evaluation_date.desc()).first()
-            
-            model_data = {
-                "id": model.id,
-                "version_name": model.version_name,
-                "model_type": model.model_type,
-                "model_path": model.model_path,
-                "base_model": model.base_model,
-                "epochs": model.epochs,
-                "is_active": bool(model.is_active),
-                "created_at": model.created_at.isoformat(),
-                "latest_metrics": None
+        if latest_metrics:
+            model_data["latest_metrics"] = {
+                "map50": latest_metrics.map50,
+                "map50_95": latest_metrics.map50_95,
+                "precision": latest_metrics.precision,
+                "recall": latest_metrics.recall,
+                "f1_score": latest_metrics.f1_score,
+                "inference_time_ms": latest_metrics.inference_time_ms,
+                "evaluation_date": latest_metrics.evaluation_date.isoformat()
             }
-            
-            if latest_metrics:
-                model_data["latest_metrics"] = {
-                    "map50": latest_metrics.map50,
-                    "map50_95": latest_metrics.map50_95,
-                    "precision": latest_metrics.precision,
-                    "recall": latest_metrics.recall,
-                    "f1_score": latest_metrics.f1_score,
-                    "inference_time_ms": latest_metrics.inference_time_ms,
-                    "evaluation_date": latest_metrics.evaluation_date.isoformat()
-                }
-            
-            result.append(model_data)
         
-        return result
+        result.append(model_data)
+    
+    return result
     except Exception as e:
         logger.error(f"Error getting models: {e}")
         return []
@@ -712,36 +712,36 @@ async def add_model_metrics(
         raise HTTPException(status_code=503, detail="Database not available")
     
     try:
-        model = db.query(ModelVersion).filter(ModelVersion.id == model_id).first()
-        if not model:
-            raise HTTPException(status_code=404, detail="Model version not found")
-        
-        metrics = ModelMetrics(
-            model_version_id=model_id,
-            map50=map50,
-            map50_95=map50_95,
-            precision=precision,
-            recall=recall,
-            f1_score=f1_score,
-            inference_time_ms=inference_time_ms,
-            test_dataset_path=test_dataset_path,
-            num_test_images=num_test_images
-        )
-        db.add(metrics)
-        db.commit()
-        db.refresh(metrics)
-        
-        return {
-            "id": metrics.id,
-            "model_version_id": metrics.model_version_id,
-            "map50": metrics.map50,
-            "map50_95": metrics.map50_95,
-            "precision": metrics.precision,
-            "recall": metrics.recall,
-            "f1_score": metrics.f1_score,
-            "inference_time_ms": metrics.inference_time_ms,
-            "evaluation_date": metrics.evaluation_date.isoformat()
-        }
+    model = db.query(ModelVersion).filter(ModelVersion.id == model_id).first()
+    if not model:
+        raise HTTPException(status_code=404, detail="Model version not found")
+    
+    metrics = ModelMetrics(
+        model_version_id=model_id,
+        map50=map50,
+        map50_95=map50_95,
+        precision=precision,
+        recall=recall,
+        f1_score=f1_score,
+        inference_time_ms=inference_time_ms,
+        test_dataset_path=test_dataset_path,
+        num_test_images=num_test_images
+    )
+    db.add(metrics)
+    db.commit()
+    db.refresh(metrics)
+    
+    return {
+        "id": metrics.id,
+        "model_version_id": metrics.model_version_id,
+        "map50": metrics.map50,
+        "map50_95": metrics.map50_95,
+        "precision": metrics.precision,
+        "recall": metrics.recall,
+        "f1_score": metrics.f1_score,
+        "inference_time_ms": metrics.inference_time_ms,
+        "evaluation_date": metrics.evaluation_date.isoformat()
+    }
     except HTTPException:
         raise
     except Exception as e:

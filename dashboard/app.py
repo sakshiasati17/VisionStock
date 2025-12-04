@@ -37,33 +37,30 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    /* Clean Background */
+    /* Force white background everywhere */
+    html, body, .stApp, [data-testid="stAppViewContainer"], .block-container, .main {
+        background: #ffffff !important;
+    }
+
+    .block-container {
+        padding: 2rem 2.5rem 4rem;
+        background: #ffffff !important;
+    }
+
     .main {
         padding: 2rem;
-        background: #ffffff;
+        background: #ffffff !important;
     }
     
-    /* Simple Sidebar */
-    [data-testid="stSidebar"] {
-        background: #f8f9fa;
+    /* FORCE BLACK TEXT ON EVERYTHING - Most aggressive selectors */
+    * {
+        color: #000000 !important;
     }
     
-    [data-testid="stSidebar"] .stSelectbox label,
-    [data-testid="stSidebar"] .stTextInput label {
-        color: #212529;
-        font-weight: 500;
-    }
-    
-    /* Clean Typography */
-    h1, h2, h3 {
-        color: #212529;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-    
-    /* Simple Buttons */
+    /* Override for specific elements that need different colors */
     .stButton > button {
-        background: #007bff;
-        color: white;
+        background: #007bff !important;
+        color: #ffffff !important;
         border: none;
         border-radius: 4px;
         padding: 0.5rem 1.5rem;
@@ -71,47 +68,101 @@ st.markdown(
     }
     
     .stButton > button:hover {
-        background: #0056b3;
+        background: #0056b3 !important;
+        color: #ffffff !important;
     }
     
-    /* Clean Metrics */
+    /* All text elements - force black */
+    p, div, span, h1, h2, h3, h4, h5, h6, li, ul, ol, td, th, label, strong, em, b, i, a, pre, code {
+        color: #000000 !important;
+        opacity: 1 !important;
+    }
+    
+    /* Streamlit specific elements */
+    .stMarkdown, .stMarkdown *, 
+    [data-testid="stMarkdownContainer"], [data-testid="stMarkdownContainer"] *,
+    .element-container, .element-container *,
+    .block-container, .block-container *,
+    .main, .main * {
+        color: #000000 !important;
+        opacity: 1 !important;
+    }
+    
+    /* Sidebar text */
+    [data-testid="stSidebar"] {
+        background: #f8f9fa !important;
+    }
+    
+    [data-testid="stSidebar"] * {
+        color: #000000 !important;
+    }
+    
+    [data-testid="stSidebar"] .stSelectbox label,
+    [data-testid="stSidebar"] .stTextInput label {
+        color: #000000 !important;
+        font-weight: 500;
+    }
+    
+    /* Metrics - keep values black, labels slightly gray */
     [data-testid="stMetricValue"] {
-        color: #212529;
+        color: #000000 !important;
         font-size: 2rem;
         font-weight: 600;
     }
     
     [data-testid="stMetricLabel"] {
-        color: #6c757d;
+        color: #333333 !important;
         font-size: 0.9rem;
     }
     
-    /* Simple Cards */
-    .metric-card {
-        background: #ffffff;
-        padding: 1.5rem;
-        border-radius: 4px;
-        border: 1px solid #dee2e6;
-    }
-    
-    /* Clean Dataframes */
-    .dataframe {
-        border: 1px solid #dee2e6;
-    }
-    
-    /* Section card */
+    /* Section cards */
     .section-card {
-        background: #ffffff;
+        background: #ffffff !important;
         border-radius: 12px;
         padding: 1.5rem;
         border: 1px solid #e9ecef;
         margin-bottom: 1.5rem;
     }
 
+    .section-card * {
+        color: #000000 !important;
+        opacity: 1 !important;
+    }
+
     .section-divider {
         height: 1px;
         background: #e9ecef;
         margin: 1.5rem 0;
+    }
+    
+    /* Dataframes */
+    .dataframe {
+        border: 1px solid #dee2e6;
+    }
+    
+    .dataframe * {
+        color: #000000 !important;
+    }
+    
+    /* Info boxes and alerts - keep text black */
+    .stAlert, .stAlert * {
+        color: #000000 !important;
+    }
+    
+    .stSuccess, .stSuccess * {
+        color: #000000 !important;
+    }
+    
+    .stError, .stError * {
+        color: #000000 !important;
+    }
+    
+    .stWarning, .stWarning * {
+        color: #000000 !important;
+    }
+    
+    .stInfo, .stInfo * {
+        color: #000000 !important;
     }
     
     /* Hide Streamlit Branding */
