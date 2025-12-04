@@ -32,30 +32,43 @@ class SceneDetector:
         # Lazy import config to avoid circular imports
         try:
             from backend.config import MODEL_PATH, MODEL_CONFIDENCE, MODEL_IOU_THRESHOLD
-        self.model_path = model_path or MODEL_PATH
-        self.confidence = MODEL_CONFIDENCE
-        self.iou_threshold = MODEL_IOU_THRESHOLD
+            self.model_path = model_path or MODEL_PATH
+            self.confidence = MODEL_CONFIDENCE
+            self.iou_threshold = MODEL_IOU_THRESHOLD
         except Exception as e:
             logger.warning(f"Failed to import config, using defaults: {e}")
-            self.model_path = model_path or "https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl"
+            # Default to baseline model (always available) instead of Hub model
+            self.model_path = model_path or "yolov8n.pt"
             self.confidence = 0.25
             self.iou_threshold = 0.45
         
         # Load model (YOLO imported lazily)
+        YOLO = _get_yolo()
+        
+        # Try loading the specified model first
         try:
-            YOLO = _get_yolo()
+            logger.info(f"Attempting to load YOLOv8 model from {self.model_path}")
+            # If it's a Hub URL, YOLO will download it automatically
+            # Add timeout handling for Hub downloads
+            import signal
+            
             self.model = YOLO(self.model_path)
-            logger.info(f"Loaded YOLOv8 model from {self.model_path}")
+            logger.info(f"Successfully loaded YOLOv8 model from {self.model_path}")
         except Exception as e:
-            logger.error(f"Failed to load model: {e}")
-            # Try to download default model
+            logger.warning(f"Failed to load model from {self.model_path}: {e}")
+            logger.warning(f"Error type: {type(e).__name__}, Error details: {str(e)}")
+            
+            # Try to load default YOLOv8n model (this is always available)
             try:
-            logger.info("Attempting to download default YOLOv8n model...")
-                YOLO = _get_yolo()
-            self.model = YOLO("yolov8n.pt")
+                logger.info("Attempting to load default YOLOv8n model as fallback...")
+                self.model = YOLO("yolov8n.pt")
+                logger.info("Successfully loaded default YOLOv8n model as fallback")
+                # Update model_path to reflect the fallback
+                self.model_path = "yolov8n.pt"
             except Exception as e2:
                 logger.error(f"Failed to load fallback model: {e2}")
-                raise
+                logger.error(f"Fallback error type: {type(e2).__name__}, Error details: {str(e2)}")
+                raise RuntimeError(f"Failed to load any model. Original error: {e}, Fallback error: {e2}")
     
     def detect(self, image_path: str, track_time: bool = True) -> Tuple[List[Dict], Optional[float]]:
         """

@@ -37,8 +37,8 @@ env_model_path = os.getenv("MODEL_PATH")
 if env_model_path:
     # Use env var if explicitly set (allows override)
     MODEL_PATH = env_model_path
-elif os.getenv("USE_HUB_MODEL", "true").lower() == "true":
-    # Use Hub model by default (trained model with 50 epochs, mAP50: 0.0413)
+elif os.getenv("USE_HUB_MODEL", "false").lower() == "true":
+    # Use Hub model only if explicitly enabled (trained model with 50 epochs, mAP50: 0.0413)
     # Check for local trained model as fallback if Hub is not accessible
     fine_tuned_path = BASE_DIR / "runs" / "detect" / "train" / "weights" / "best.pt"
     if fine_tuned_path.exists():
@@ -49,17 +49,19 @@ elif os.getenv("USE_HUB_MODEL", "true").lower() == "true":
         MODEL_PATH = str(fine_tuned_model.resolve())
     else:
         # Use Hub model URL (will be downloaded on first use)
+        # If Hub fails, inference.py will fallback to yolov8n.pt
         MODEL_PATH = HUB_MODEL_URL
 else:
-    # Use local trained model if available
+    # DEFAULT: Use baseline model (yolov8n.pt - always available and reliable)
+    # This ensures the service works immediately without Hub model issues
+    MODEL_PATH = "yolov8n.pt"
+    
+    # Check for local trained model as optional upgrade
     fine_tuned_path = BASE_DIR / "runs" / "detect" / "train" / "weights" / "best.pt"
     if fine_tuned_path.exists():
         MODEL_PATH = str(fine_tuned_path.resolve())
     elif fine_tuned_model.exists():
         MODEL_PATH = str(fine_tuned_model.resolve())
-    else:
-        # Fallback to baseline
-        MODEL_PATH = str(baseline_model.resolve())
 MODEL_CONFIDENCE = float(os.getenv("MODEL_CONFIDENCE", 0.25))
 MODEL_IOU_THRESHOLD = float(os.getenv("MODEL_IOU_THRESHOLD", 0.45))
 

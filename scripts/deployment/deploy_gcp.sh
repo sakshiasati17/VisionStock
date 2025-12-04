@@ -85,7 +85,7 @@ gcloud run deploy ${SERVICE_NAME} \
     --cpu 2 \
     --timeout 300 \
     --max-instances 10 \
-    --set-env-vars "PYTHONPATH=/app,PYTHONUNBUFFERED=1" \
+    --set-env-vars "PYTHONPATH=/app,PYTHONUNBUFFERED=1,USE_HUB_MODEL=false,MODEL_PATH=yolov8n.pt" \
     --project ${PROJECT_ID}
 
 # Get the service URL

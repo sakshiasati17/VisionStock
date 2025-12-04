@@ -147,7 +147,7 @@ class ModelMetrics(Base):
 def init_db():
     """Initialize database tables."""
     try:
-        Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
@@ -157,11 +157,11 @@ def init_db():
 def get_db():
     """Dependency for FastAPI to get database session."""
     try:
-        db = SessionLocal()
-        try:
-            yield db
-        finally:
-            db.close()
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)

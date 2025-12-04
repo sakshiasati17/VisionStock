@@ -33,5 +33,5 @@ ENV MODEL_PATH=yolov8n.pt
 EXPOSE 8080
 
 # Run API (Cloud Run sets PORT automatically)
-CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8080}
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8080"]
 

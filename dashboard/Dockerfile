@@ -13,7 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy dashboard code
 COPY dashboard/ ./dashboard/
 
-# Copy results directory (for study comparisons)
+# Create results directory and copy if exists
+RUN mkdir -p ./results/
 COPY results/ ./results/
 
 # Expose port (Cloud Run uses dynamic PORT)

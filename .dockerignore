@@ -35,7 +35,7 @@ data/
 models/
 weights/
 runs/
-results/
+# results/ - Keep results/ for dashboard (contains JSON comparison files)
 
 # Logs
 logs/

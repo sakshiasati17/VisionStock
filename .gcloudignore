@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Data and models (too large)
+data/
+models/
+*.pt
+*.pth
+*.onnx
+
+# Logs
+*.log
+logs/
+
+# Tests
+tests/
+test_*.py
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Results (keep structure but not large files)
+results/*.json
+!results/study1_comparison.json
+!results/study2_comparison.json
+
+# Scripts (not needed in container)
+# scripts/ - Keep scripts for deployment
+
+# Dashboard - KEEP for dashboard deployment
+# dashboard/ - REMOVED - needed for dashboard build
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
