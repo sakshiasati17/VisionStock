@@ -47,17 +47,15 @@ cd VisionStock
 pip install -r requirements.txt
 
 # 3. Set up database
-createdb shelf_sense_db
+createdb visionstock
 
 # 4. Configure environment
-cp env_template.txt .env
+cp the template file from the repo root as .env
 # Edit .env with your database credentials
 
 # 5. Initialize database
 python backend/init_database.py
 ```
-
-See [INSTALLATION.md](INSTALLATION.md) for detailed setup instructions.
 
 ### Running the Application
 
@@ -87,15 +85,12 @@ streamlit run dashboard/app.py
 
 **Local Docker:**
 ```bash
-./scripts/deploy.sh
+./scripts/deployment/deploy.sh
 ```
 
 **GCP Cloud Run (Recommended for Large Images):**
 ```bash
-# Quick deploy
-./scripts/deploy_gcp.sh
-
-# Or see detailed guide
+./scripts/deployment/deploy_gcp.sh
 ```
 
 **Production Model:**
@@ -113,19 +108,15 @@ VisionStock/
 ├── dashboard/                # Streamlit UI
 │   └── app.py               # Dashboard interface
 ├── scripts/                  # All scripts organized
+│   ├── deployment/          # Deploy scripts + cloudbuild configs
 │   ├── notebooks/           # Evaluation scripts
 │   └── training/            # Training scripts
 ├── utils/                    # Utility functions
-├── results/                  # Evaluation results
-│   ├── study1_comparison.json
-│   └── study2_comparison.json
+├── results/                  # Evaluation + benchmark results
 ├── data/                     # Dataset configs (YAML only)
-├── models/                   # Model files
+├── models/                   # Model weights (yolov8n.pt)
 └── tests/                    # Test scripts
 ```
-
-
-
 ## 🔌 API Endpoints
 
 ### Detection
@@ -140,7 +131,6 @@ VisionStock/
 - `POST /api/analyze` - Compare detections with planogram
 - `GET /api/discrepancies` - Get discrepancy records
 - `GET /api/summary` - Get summary statistics
-
 
 ## 🧪 Training
 
@@ -239,11 +229,11 @@ Free tier (request-based billing): 180,000 vCPU-seconds + 360,000 GiB-seconds + 
 
 ## 📝 License
 
-[Add your license here]
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file.
 
 ## 👥 Contributors
 
-[Add contributors here]
+- [Sakshi Asati](https://github.com/sakshiasati17)
 
 ## 🙏 Acknowledgments
 
