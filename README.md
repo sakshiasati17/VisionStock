@@ -119,19 +119,16 @@ VisionStock/
 ├── utils/                    # Utility functions
 ├── results/                  # Evaluation results
 │   ├── study1_comparison.json
-│   ├── study2_comparison.json
-│   └── FINAL_TWO_STUDY_REPORT.md
+│   └── study2_comparison.json
 ├── data/                     # Dataset configs (YAML only)
 ├── models/                   # Model files
 ├── docs/                     # Documentation
 └── tests/                    # Test scripts
 ```
 
-See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for complete structure.
 
 ## 📚 Documentation
 
-- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Complete directory structure
 - [docs/GCP_DEPLOYMENT.md](docs/GCP_DEPLOYMENT.md) - GCP Cloud Run deployment guide
 
 ## 🔌 API Endpoints
@@ -188,7 +185,6 @@ python scripts/training/train_with_hub.py
 Training results and metrics are stored in `results/`:
 - `study1_comparison.json` - Study 1 metrics
 - `study2_comparison.json` - Study 2 metrics
-- `FINAL_TWO_STUDY_REPORT.md` - Comprehensive comparison report
 
 ## 🛠️ Technology Stack
 
