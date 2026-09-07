@@ -1,0 +1,14 @@
+{
+  "cold_start_ms": 995.6,
+  "iterations": 50,
+  "warm_avg_ms": 64.4,
+  "warm_min_ms": 55.4,
+  "warm_max_ms": 80.4,
+  "p50_ms": 63.5,
+  "p75_ms": 67.0,
+  "p95_ms": 77.4,
+  "p99_ms": 80.0,
+  "requirement_met": true,
+  "model": "./models/yolov8n.pt",
+  "test_image": "data/uploads/benchmark_synthetic.jpg"
+}

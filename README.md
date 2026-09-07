@@ -179,6 +179,55 @@ python scripts/training/train_with_hub.py
 Training results and metrics are stored in `results/`:
 - `study1_comparison.json` - Study 1 metrics
 - `study2_comparison.json` - Study 2 metrics
+- `performance_test_results.json` - Latest latency benchmark (cold start, percentiles)
+
+## ⚙️ Model Configuration
+
+Both inference parameters live in `backend/config.py` and can be overridden via environment variables.
+
+| Parameter | Default | Env override | Why this value |
+|---|---|---|---|
+| Confidence threshold | **0.25** (`MODEL_CONFIDENCE`) | `MODEL_CONFIDENCE` | Set low to maximise recall: in inventory detection a missed product (an unnoticed stock-out) is costlier than a false positive. Precision can be filtered later by the consumer. |
+| NMS IoU threshold | **0.45** (`MODEL_IOU_THRESHOLD`) | `MODEL_IOU_THRESHOLD` | Boxes overlapping by more than 45% IoU are merged, so a single physical product is never counted twice on dense shelves where predictions overlap heavily. |
+
+## ⚡ Performance Benchmarks
+
+Measured locally (macOS, CPU-only, `yolov8n.pt`, 50 warm iterations) — reproduce with:
+
+```bash
+python3 tests/performance_test.py
+```
+
+| Metric | Value |
+|---|---|
+| Cold start (model load + first inference) | 995.6 ms |
+| Warm average latency | 64.4 ms |
+| p50 / p75 | 63.5 / 67.0 ms |
+| p95 / p99 | 77.4 / 80.0 ms |
+| Requirement (≤2 s/image) | ✅ MET |
+
+Results are saved to `results/performance_test_results.json`. Cold start on Cloud Run is lower in practice: the model is baked into the container image, so no first-use download occurs.
+
+## 💰 Cost per 1,000 Images
+
+Calculated from [Cloud Run pricing](https://cloud.google.com/run/pricing) (request-based billing, us-central1, checked September 2026):
+
+- CPU: $0.000018 per vCPU-second; Memory: $0.000002 per GiB-second
+- Cloud Run bills per request rounded up to the nearest 100 ms; at ~65 ms warm latency each image is billed as 0.1 s on 1 vCPU / 512 MiB
+
+**Per image**: 0.1 vCPU-s × $0.000018 + 0.05 GiB-s × $0.000002 ≈ $0.000002
+**→ ≈ $0.002 per 1,000 images**
+
+Free tier (request-based billing): 180,000 vCPU-seconds + 360,000 GiB-seconds + 2 million requests per month
+**→ ≈ 1.8 million images/month free** (CPU-bound at 0.1 vCPU-s per image)
+
+## ⚠️ Dataset Limitations
+
+- **Limited training data**: the custom retail dataset contains only 111 images, which constrains achievable accuracy
+- **Small evaluation set**: 11 test images limits statistical confidence in the reported metrics
+- **Class imbalance**: some product classes have far fewer examples than others
+- **Precision trade-off**: the fine-tuned model has lower precision than the COCO baseline on the large SKU-110K dataset (Study 1), accepted in exchange for much higher recall
+- **Model size**: performance could improve with more data and larger backbones (YOLOv8s/m)
 
 ## 🛠️ Technology Stack
 

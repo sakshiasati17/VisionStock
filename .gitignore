@@ -90,6 +90,10 @@ runs/
 *.cache
 ultralytics/
 
+# Uploaded files (runtime data)
+data/uploads/*
+!data/uploads/.gitkeep
+
 # Keep essential structure
 !data/custom/data.yaml
 !data/sku110k/SKU-110K/data.yaml
