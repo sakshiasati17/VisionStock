@@ -2,7 +2,7 @@
 
 ## 1. Inference Latency
 
-Benchmarked on local MacBook Air (Apple Silicon, CPU-only, 20 warm iterations after 3-run warmup).
+### MacBook Air (Apple Silicon, CPU-only) — 20 warm iterations
 
 | Metric | Value |
 |---|---|
@@ -10,6 +10,18 @@ Benchmarked on local MacBook Air (Apple Silicon, CPU-only, 20 warm iterations af
 | Warm average | 59.7ms |
 | Warm minimum | 55.8ms |
 | Warm maximum | 68.2ms |
+
+### Linux Server (CPU-only) — 50 warm iterations
+
+| Metric | Value |
+|---|---|
+| p50 (median) | 68.4ms |
+| p75 | 71.3ms |
+| p95 | 78.2ms |
+| p99 | 81.6ms |
+| Average | 69.2ms |
+| Minimum | 61.9ms |
+| Maximum | 81.9ms |
 
 Full API round-trip on GCP Cloud Run (includes network + DB write): **< 2s**
 
