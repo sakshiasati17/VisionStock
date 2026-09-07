@@ -76,3 +76,6 @@ echo "📊 View logs:"
 echo "   gcloud run services logs read ${SERVICE_NAME} --region ${REGION} --project ${PROJECT_ID}"
 
 
+
+
+
