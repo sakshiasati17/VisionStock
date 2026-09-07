@@ -12,21 +12,23 @@ This project demonstrates the research question: **"Does fine-tuning YOLOv8 on a
   - Study 1: Different datasets (SKU-110K baseline, Custom fine-tuned)
   - Study 2: Same dataset (Custom baseline, Custom fine-tuned)
 - ✅ **Baseline Evaluation**: Pre-trained YOLOv8n on SKU-110K samples
-- ✅ **Fine-Tuning**: Custom dataset training (34 classes, 111 images) - **Trained on Google Colab**
-- ✅ **Production Model**: Trained model hosted on [Ultralytics Hub](https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl) (50 epochs, mAP50: 4.13%)
+- ✅ **Fine-Tuning**: Custom dataset of 111 images across 34 classes (78 train / 22 val / 11 test) - **Trained on Google Colab**
+- ✅ **Trained Model Artifact**: Fine-tuned model hosted on [Ultralytics Hub](https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl) (50 epochs, mAP50: 4.04%)
 - ✅ **REST API**: FastAPI backend for image upload and detection
 - ✅ **Database Integration**: PostgreSQL for storing detections and planograms
 - ✅ **SQL Analytics**: Automated discrepancy detection (missing, low stock, misplaced)
-- ✅ **Interactive Dashboard**: Streamlit UI with 8 sections including two-study comparison
+- ✅ **Interactive Dashboard**: Streamlit UI with 5 pages including a two-study comparison view
 - ✅ **Docker Deployment**: Ready for local and cloud deployment
 - ✅ **GCP Cloud Run Ready**: Pre-configured for Google Cloud Platform deployment
 
-## 📊 Success Metrics
+## 📊 Original Project Targets
 
-- **≥10% mAP improvement** after fine-tuning vs. baseline
-- **85-90% precision/recall** on evaluation images
-- **≤5% discrepancy error** for stock gap identification
-- **≤2 seconds** end-to-end latency per image
+These were initial design targets, not achieved evaluation results. Actual performance is reported in the Results section below.
+
+- ≥10% mAP improvement after fine-tuning vs. baseline *(achieved: 4.04% mAP50 on the same dataset, Study 2)*
+- 85-90% precision/recall on evaluation images *(achieved: precision 4.23%, recall 11.79% — limited by the small dataset)*
+- ≤5% discrepancy error for stock gap identification
+- ≤2 seconds end-to-end latency per image *(achieved: 64.4 ms average — see Performance Benchmarks)*
 
 ## 🚀 Quick Start
 
@@ -93,8 +95,8 @@ streamlit run dashboard/app.py
 ./scripts/deployment/deploy_gcp.sh
 ```
 
-**Production Model:**
-The system uses the trained model from [Ultralytics Hub](https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl) by default. No local model files needed!
+**Trained Model Artifact:**
+The system can use the trained model from [Ultralytics Hub](https://hub.ultralytics.com/models/jfHGXJxP5esp8iuhi8Yl) by default. No local model files needed!
 
 ## 📁 Project Structure
 
@@ -156,7 +158,7 @@ python scripts/training/train_with_hub.py
 
 ### Two-Study Evaluation Approach
 
-**Study 1: Different Datasets (As Per Original Proposal)**
+**Study 1: Different Datasets (exploratory — baseline and fine-tuned models evaluated on different datasets, so results are not a direct improvement caused by fine-tuning)**
 - Baseline: COCO pre-trained on SKU-110K dataset
 - Fine-Tuned: Custom Retail Dataset
 - Results: See `results/study1_comparison.json`
@@ -177,8 +179,8 @@ Both inference parameters live in `backend/config.py` and can be overridden via 
 
 | Parameter | Default | Env override | Why this value |
 |---|---|---|---|
-| Confidence threshold | **0.25** (`MODEL_CONFIDENCE`) | `MODEL_CONFIDENCE` | Set low to maximise recall: in inventory detection a missed product (an unnoticed stock-out) is costlier than a false positive. Precision can be filtered later by the consumer. |
-| NMS IoU threshold | **0.45** (`MODEL_IOU_THRESHOLD`) | `MODEL_IOU_THRESHOLD` | Boxes overlapping by more than 45% IoU are merged, so a single physical product is never counted twice on dense shelves where predictions overlap heavily. |
+| Confidence threshold | **0.25** (`MODEL_CONFIDENCE`) | `MODEL_CONFIDENCE` | A 0.25 confidence threshold prioritises recall in dense shelf scenes. This increases the number of candidate detections but may also increase false positives, so the trade-off is reported through precision and recall. |
+| NMS IoU threshold | **0.45** (`MODEL_IOU_THRESHOLD`) | `MODEL_IOU_THRESHOLD` | Predictions with IoU above 0.45 are compared, and lower-confidence overlapping boxes are suppressed to reduce duplicate detections in dense shelf scenes. NMS reduces duplicates but cannot guarantee that a product is never counted twice. |
 
 ## ⚡ Performance Benchmarks
 
@@ -196,24 +198,24 @@ python3 tests/performance_test.py
 | p95 / p99 | 77.4 / 80.0 ms |
 | Requirement (≤2 s/image) | ✅ MET |
 
-Results are saved to `results/performance_test_results.json`. Cold start on Cloud Run is lower in practice: the model is baked into the container image, so no first-use download occurs.
+Results are saved to `results/performance_test_results.json`. The model is included in the container image to avoid downloading weights during application startup; Cloud Run cold-start latency has not been measured.
 
-## 💰 Cost per 1,000 Images
+## 💰 Illustrative Cloud Run Compute Estimate
 
-Calculated from [Cloud Run pricing](https://cloud.google.com/run/pricing) (request-based billing, us-central1, checked September 2026):
+Estimated cost per 1,000 images, calculated from [Cloud Run pricing](https://cloud.google.com/run/pricing) (request-based billing, us-central1, checked September 2026):
 
 - CPU: $0.000018 per vCPU-second; Memory: $0.000002 per GiB-second
 - Cloud Run bills per request rounded up to the nearest 100 ms; at ~65 ms warm latency each image is billed as 0.1 s on 1 vCPU / 512 MiB
 
 **Per image**: 0.1 vCPU-s × $0.000018 + 0.05 GiB-s × $0.000002 ≈ $0.000002
-**→ ≈ $0.002 per 1,000 images**
+**→ estimated ≈ $0.002 per 1,000 images** (illustrative estimate — excludes container startup, API overhead, image transfer, database operations, logging, failed requests, concurrency effects, and Mac-vs-Cloud Run CPU differences)
 
 Free tier (request-based billing): 180,000 vCPU-seconds + 360,000 GiB-seconds + 2 million requests per month
-**→ ≈ 1.8 million images/month free** (CPU-bound at 0.1 vCPU-s per image)
+**→ estimated ≈ 1.8 million images/month free tier capacity** (CPU-bound at 0.1 vCPU-s per image). These are estimates from public pricing, not measured production costs.
 
 ## ⚠️ Dataset Limitations
 
-- **Limited training data**: the custom retail dataset contains only 111 images, which constrains achievable accuracy
+- **Limited training data**: the custom retail dataset contains 111 images (78 used for training, 22 validation, 11 test), which constrains achievable accuracy
 - **Small evaluation set**: 11 test images limits statistical confidence in the reported metrics
 - **Class imbalance**: some product classes have far fewer examples than others
 - **Precision trade-off**: the fine-tuned model has lower precision than the COCO baseline on the large SKU-110K dataset (Study 1), accepted in exchange for much higher recall
