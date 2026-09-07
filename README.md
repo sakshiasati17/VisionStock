@@ -96,7 +96,6 @@ streamlit run dashboard/app.py
 ./scripts/deploy_gcp.sh
 
 # Or see detailed guide
-# See docs/GCP_DEPLOYMENT.md for step-by-step instructions
 ```
 
 **Production Model:**
@@ -122,14 +121,10 @@ VisionStock/
 │   └── study2_comparison.json
 ├── data/                     # Dataset configs (YAML only)
 ├── models/                   # Model files
-├── docs/                     # Documentation
 └── tests/                    # Test scripts
 ```
 
 
-## 📚 Documentation
-
-- [docs/GCP_DEPLOYMENT.md](docs/GCP_DEPLOYMENT.md) - GCP Cloud Run deployment guide
 
 ## 🔌 API Endpoints
 
@@ -146,7 +141,6 @@ VisionStock/
 - `GET /api/discrepancies` - Get discrepancy records
 - `GET /api/summary` - Get summary statistics
 
-See [USAGE.md](USAGE.md) for detailed API examples.
 
 ## 🧪 Training
 
