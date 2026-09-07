@@ -43,7 +43,7 @@ gcloud services enable cloudbuild.googleapis.com run.googleapis.com containerreg
 # Build using Cloud Build
 echo "🔨 Building Docker image with Cloud Build..."
 gcloud builds submit \
-    --config cloudbuild-dashboard.yaml \
+    --config scripts/deployment/cloudbuild-dashboard.yaml \
     --timeout=20m \
     --project=${PROJECT_ID} 2>&1
 
